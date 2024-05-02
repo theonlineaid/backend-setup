@@ -1,11 +1,11 @@
-import express from 'express';
+import express, {Express, Response, Request} from 'express';
 
-const app = express();
+const app: Express = express();
 
 // Middlwear 
 app.use(express.json());
 
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
     res.send('Hello World');
 })
 
