@@ -1,4 +1,5 @@
 import express, {Express, Response, Request} from 'express';
+import { PORT } from './secret';
 
 const app: Express = express();
 
@@ -9,8 +10,7 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello World');
 })
 
-const port = process.env.PORT || 5000;
 
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 })
