@@ -3,7 +3,10 @@ import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../secret";
+import { JWT_SECRET } from "../utils/secret";
+import { NotFoundException } from "../execptions/notFound";
+import { ErrorCode } from "../execptions/root";
+import { BadRequestsException } from "../execptions/badRequests";
 
 const authCtrl = {
 
@@ -30,41 +33,27 @@ const authCtrl = {
     },
 
     login: async (req: Request, res: Response) => {
-        const { email } = req.body;
-        try {
-            const user = await prismaClient.user.findFirst({ where: { email } });
-            if (!user) {
-                return res.status(404).json({ message: `User doesn't exist` });
-            }
-            // Generate JWT token without including the password
-            const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1d' });
-            // Send user data and token back to the client
-            res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
-        } catch (error) {
-            console.error("Error logging in user:", error);
-            res.status(500).json({ message: "Internal Server Error" });
+        const { email, password } = req.body;
+
+        let user = await prismaClient.user.findFirst({ where: { email } })
+        if (!user) {
+            throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND)
         }
+        if (!compareSync(password, user.password)) {
+            throw new BadRequestsException('Incorrect password', ErrorCode.INCORRECT_PASSWORD)
+        }
+        const token = jwt.sign({
+            userId: user.id
+        }, JWT_SECRET)
+
+
+        res.json({ user, token })
     },
 
-    // login: async (req: Request, res: Response) => {
-    //     const { email, password } = req.body;
+    me: async (req: Request, res: Response) => {
+        res.json(req.user)
+    }
 
-    //     let user = await prismaClient.user.findFirst({ where: { email } })
-
-
-    //     if (!user) {
-    //         throw Error(`User doesn't exists`)
-    //     }
-
-    //     if (!compareSync(password, user.password)) {
-    //         res.status(400).json({ message: `Incorrect password` })
-    //     }
-
-    //     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '1d' })
-
-    //     res.json({user, token})
-
-    // },
 };
 
 export default authCtrl;

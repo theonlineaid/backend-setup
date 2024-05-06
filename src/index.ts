@@ -1,5 +1,5 @@
 import express, { Express } from 'express';
-import { PORT } from './secret';
+import { PORT } from './utils/secret';
 import RootRouter from './routes';
 import { PrismaClient } from '@prisma/client';
 
