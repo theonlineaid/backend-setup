@@ -1,12 +1,14 @@
 import express, { Express } from 'express';
+import { PrismaClient } from '@prisma/client';
+import { errorMiddleware } from './middlewares/error';
 import { PORT } from './utils/secret';
 import RootRouter from './routes';
-import { PrismaClient } from '@prisma/client';
 
 const app: Express = express();
 
-// Middlwear 
+// Middleware 
 app.use(express.json());
+app.use(errorMiddleware);
 app.use('/api', RootRouter)
 
 export const prismaClient = new PrismaClient({
