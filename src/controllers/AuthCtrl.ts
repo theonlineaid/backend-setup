@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 
@@ -36,18 +36,25 @@ const authCtrl = {
         const { email, password } = req.body;
 
         let user = await prismaClient.user.findFirst({ where: { email } })
-        if (!user) {
-            throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND)
-        }
+        if (!user) throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND) 
+
         if (!compareSync(password, user.password)) {
             throw new BadRequestsException('Incorrect password', ErrorCode.INCORRECT_PASSWORD)
         }
+
+        if(!email) throw new NotFoundException('Please give your email.', ErrorCode.USER_NOT_FOUND)
+
         const token = jwt.sign({
             userId: user.id
         }, JWT_SECRET)
 
-
         res.json({ user, token })
+    },
+
+    logout: async (req: Request, res: Response) => {
+        res.clearCookie('jwtToken');
+
+        res.json({ message: "Logout successful" });
     },
 
     me: async (req: Request, res: Response) => {
