@@ -39,14 +39,20 @@ const authCtrl = {
         if (!user) throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND)
 
         if (!compareSync(password, user.password)) {
+            res.json({ message: `Incorrect password ${ErrorCode.INCORRECT_PASSWORD}` });
             throw new BadRequestsException('Incorrect password', ErrorCode.INCORRECT_PASSWORD)
         }
 
         if (!email) throw new NotFoundException('Please give your email.', ErrorCode.USER_NOT_FOUND)
 
-        const token = jwt.sign({
-            userId: user.id
-        }, JWT_SECRET)
+
+        const access = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15d' })
+        const refresh = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+        const token = {
+            access,
+            refresh
+        }
 
         res.json({ user, token })
     },
@@ -62,7 +68,7 @@ const authCtrl = {
     },
 
     changePassword: async (req: Request, res: Response) => {
-        
+
         // Ensure that req.user is of the correct type
         const user = req.user as { id: number };
         const { id: userId } = user; // Destructure the id property from user
