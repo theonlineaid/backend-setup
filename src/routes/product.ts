@@ -10,7 +10,7 @@ ProductRouter.post('/', [authMiddleware, adminMiddleware], errorHandler(productC
 ProductRouter.get('/',  errorHandler(productCtrl.listProducts))
 ProductRouter.patch('/:id', [authMiddleware, adminMiddleware], errorHandler(productCtrl.updataProduct))
 ProductRouter.delete('/:id', [authMiddleware, adminMiddleware], errorHandler(productCtrl.deleteProduct))
-// ProductRouter.get('/:id', errorHandler(productCtrl.getProductById))
-ProductRouter.get('/search', errorHandler(productCtrl.searchProducts))
+ProductRouter.get('/:id', errorHandler(productCtrl.getProductById))
+// ProductRouter.get('/search', errorHandler(productCtrl.searchProducts))
 
 export default ProductRouter;
