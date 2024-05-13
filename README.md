@@ -19,4 +19,5 @@ npx prisma migrate dev --name CreateUserTable
 npx prisma migrate dev --name AddRoleToUser
 npx prisma studio // it will run browser http://localhost:5555
 npx prisma migrate dev --name CreateProductTable
+npx prisma migrate dev --name AddAddressTable
 ```

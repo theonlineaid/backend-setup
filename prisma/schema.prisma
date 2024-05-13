@@ -1,6 +1,5 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -8,16 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String   @unique
+  email     String    @unique
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  role      Role     @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  role      Role      @default(USER)
+  Address   Address[]
 
   @@map("users")
+}
+
+model Address {
+  id        Int      @id @default(autoincrement())
+  lineOne   String
+  lineTwo   String?
+  city      String
+  country   String
+  pincode   String
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("addresses")
 }
 
 model Product {
@@ -30,9 +50,4 @@ model Product {
   updatedAt   DateTime @updatedAt
 
   @@map("products")
-}
-
-enum Role {
-  ADMIN
-  USER
 }

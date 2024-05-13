@@ -15,10 +15,10 @@ export const errorHandler = (method: Function) => {
             } else {
                 if( error instanceof ZodError) {
                     exception = new BadRequestsException('Unprocessable entity.', ErrorCode.UNPROCESSABLE_ENTITY, error);
-                    res.status(401).json({ error: error.message });
+                    res.status(401).json({ message: "Unprocessable entity", error:exception});
                 } else {
                     exception = new InternalException('Something went wrong!', error, ErrorCode.INTERNAL_EXCEPTION)
-                    res.status(500).json({ error: "Internal Server Error from errorHandler.ts" })
+                    res.status(500).json({ message: "Something went wrong!", error: exception })
                 }
             }
             next(exception)
