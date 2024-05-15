@@ -9,6 +9,7 @@ AuthRouter.post('/register', errorHandler(authCtrl.register))
 AuthRouter.post('/login', errorHandler(authCtrl.login))
 AuthRouter.post('/logout', authCtrl.logout)
 AuthRouter.get('/me', [authMiddleware], errorHandler(authCtrl.me))
-AuthRouter.post('/change-password', [authMiddleware], errorHandler(authCtrl.changePassword))
+AuthRouter.post('/:id', [authMiddleware], errorHandler(authCtrl.changeMyPassword))
+AuthRouter.delete('/:id', [authMiddleware], errorHandler(authCtrl.deleteMyAccount))
 
 export default AuthRouter;
