@@ -3,11 +3,6 @@ import { prismaClient } from "..";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 
-type CustomStringFilter = {
-    contains: string;
-    mode: 'insensitive'; // Define the 'mode' property with a specific value
-};
-
 const productCtrl = {
     createProduct: async (req: Request, res: Response) => {
         const product = await prismaClient.product.create({
@@ -37,39 +32,27 @@ const productCtrl = {
             throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND)
         }
     },
+
     deleteProduct: async (req: Request, res: Response) => {
+
         try {
             const productId = +req.params.id;
 
-            // Check if the product ID is provided
-            if (!productId || isNaN(productId)) {
-                throw new NotFoundException('Product ID not provided or invalid.', ErrorCode.BAD_REQUEST);
-            }
+            await prismaClient.product.delete({
+                where: {
+                    id: productId
+                }
+            })
+            res.json({ success: true, message: 'Product deleted successfully.' })
 
-            // Attempt to delete the product
-            const deleteProduct = await prismaClient.product.delete({
-                where: { id: productId }
-            });
-
-            // Check if the product was successfully deleted
-            if (!deleteProduct) {
-                throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
-            }
-
-            // Respond with a success message
-            res.json({ message: 'Product deleted successfully.' });
         } catch (err) {
-            // Handle errors and return a meaningful response to the client;
-            if (err instanceof NotFoundException) {
-                // If the product was not found, return a 404 Not Found error
-                res.status(404).json({ error: err.message });
-            } else {
-                // For other errors, return a generic 500 Internal Server Error
-                res.status(500).json({ error: 'Internal Server Error' });
-            }
+            throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND)
         }
+
     },
-    listProducts: async (req: Request, res: Response) => {
+
+
+    getAllProducts: async (req: Request, res: Response) => {
         // Get the value of 'skip' from the query parameters or default to 0
         const skip = req.query.skip ? +req.query.skip : 0;
 
@@ -90,10 +73,9 @@ const productCtrl = {
 
     },
 
-    getProductById: async (req: Request, res: Response) => {
+    getSingleProduct: async (req: Request, res: Response) => {
         try {
-            const productId = parseInt(req.params.id); // Parse the product ID from the request parameters
-            console.log(productId)
+            const productId = parseInt(req.params.id);
 
             // Find the product with the specified ID
             const product = await prismaClient.product.findFirst({
@@ -102,16 +84,12 @@ const productCtrl = {
                 }
             });
 
-            // Check if the product exists
             if (!product) {
                 throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
             }
 
-            // Send the response with the found product
             res.json(product);
         } catch (error) {
-            // Handle any errors
-            console.error(error);
             res.status(500).json({ error: 'Internal Server Error' });
         }
     },
