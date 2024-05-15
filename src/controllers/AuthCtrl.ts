@@ -67,7 +67,7 @@ const authCtrl = {
         res.json((req as any)?.user);
     },
 
-    changePassword: async (req: Request, res: Response) => {
+    changeMyPassword: async (req: Request, res: Response) => {
 
         // Ensure that req.user is of the correct type
         const user = req.user as { id: number };
@@ -105,7 +105,23 @@ const authCtrl = {
                 res.status(500).json({ error: "Internal Server Error" });
             }
         }
-    }
+    },
+
+    deleteMyAccount: async (req: Request, res: Response) => {
+
+        try {
+            await prismaClient.user.delete({
+                where: {
+                    id: +req.params.id
+                }
+            })
+            res.json({ success: true })
+
+        } catch (err) {
+            throw new NotFoundException('User not found.', ErrorCode.ADDRESS_NOT_FOUND)
+        }
+
+    },
 
 };
 
