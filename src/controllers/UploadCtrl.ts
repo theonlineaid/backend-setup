@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import multer from 'multer';
 import path from 'path'; // Import the 'path' module to work with file paths
+import { PORT } from "../utils/secret";
 
 const bannerUpload = multer({
     dest: 'uploads/banners/',
@@ -41,17 +42,24 @@ const uploadCtrl = {
 
             // Extract the extension name from the original file name
             const extensionName = path.extname(req.file.originalname);
-          
+
             // Handle the uploaded file
-            const bannerImagePath = req.file.path;
+            // const bannerImagePath = req.file.path;
+            const rsPath = req.file.path.replace(`uploads\\banners\\`, `uploads/banners/`);
+
+
+            // Get the hostname of the server
+            const hostname = req.hostname;
+            const imagePath = `http://${hostname}:${PORT}/${rsPath}`;
+            console.log(imagePath)
 
             // Save the banner image path and extension name to the database or perform other actions
             // Example: Banner.create({ imagePath: bannerImagePath, extension: extensionName });
 
             // Send a success response with the extension name
-            return res.json({ message: 'Banner uploaded successfully', imagePath: bannerImagePath, extension: extensionName });
+            return res.json({ message: 'Banner uploaded successfully', imagePath, extension: extensionName });
         })
-    }, 
+    },
 
     updateBanner: async (req: Request, res: Response) => {
         bannerUpload.single('bannerImage')(req, res, async function (err) {
@@ -71,22 +79,22 @@ const uploadCtrl = {
 
             // Extract the extension name from the original file name
             const extensionName = path.extname(uploadedFile.originalname);
-          
+
             // Handle the uploaded file (e.g., update database, rename file, etc.)
             // Replace this with your actual update logic
             // For example, if you're updating a banner in the database, you might do something like:
             // const bannerId = req.params.id;
             // const updatedBanner = await Banner.findByIdAndUpdate(bannerId, { imagePath: uploadedFile.path });
-            
+
             // Send a success response with the updated banner information
-            return res.json({ 
-                message: 'Banner updated successfully', 
-                imagePath: uploadedFile.path, 
-                extension: extensionName 
+            return res.json({
+                message: 'Banner updated successfully',
+                imagePath: uploadedFile.path,
+                extension: extensionName
             });
         });
     }
-        
+
 }
 
 export default uploadCtrl;

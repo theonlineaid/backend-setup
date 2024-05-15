@@ -1,12 +1,12 @@
 import { Response, Request } from "express";
-import { prismaClient } from "..";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { ProductSchema } from "../schemas/product";
+import { prismaClient } from "..";
 
 const productCtrl = {
     createProduct: async (req: Request, res: Response) => {
-        
+
         ProductSchema.parse(req.body)
 
         const product = await prismaClient.product.create({
@@ -18,19 +18,19 @@ const productCtrl = {
         res.json(product)
     },
 
-    updataProduct: async (req: Request, res: Response) => {
+    updateProduct: async (req: Request, res: Response) => {
         try {
             const product = req.body;
             if (product.tags) {
                 product.tags = product.tags.join(',')
             }
-            const updateProduct = await prismaClient.product.update({
+            const updateProduct_ = await prismaClient.product.update({
                 where: {
                     id: +req.params.id
                 },
                 data: product
             })
-            res.json(updateProduct)
+            res.json(updateProduct_)
 
         } catch (err) {
             throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND)
@@ -66,7 +66,7 @@ const productCtrl = {
         // Fetch products with pagination
         const products = await prismaClient.product.findMany({
             skip: skip,
-            take: 5 // initially show only five producs 
+            take: 5 // initially show only five 
         });
 
         // Send the response with product count and data
@@ -101,11 +101,11 @@ const productCtrl = {
     // searchProducts: async (req: Request, res: Response) => {
     //     // Get the search query from the request parameters
     //     const searchQuery = req.query.q?.toString() || '';
-    
+
     //     // Get pagination options from query parameters or use defaults
     //     const skip = req.query.skip ? +req.query.skip : 0;
     //     const take = req.query.take ? +req.query.take : 5;
-    
+
     //     // Find products that match the search query
     //     const products = await prismaClient.product.findMany({
     //         where: {
@@ -118,12 +118,12 @@ const productCtrl = {
     //         skip: skip,
     //         take: take,
     //     });
-    
-    
+
+
     //     // Send the response with the search results
     //     res.json(products);
     // }
-    
+
 
 };
 
