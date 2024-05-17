@@ -11,6 +11,7 @@ UserRouter.put('/address/:id', [authMiddleware], errorHandler(userCtrl.updateAdd
 UserRouter.delete('/address/:id', [authMiddleware], errorHandler(userCtrl.deleteAddress))
 UserRouter.get('/address/:id', [authMiddleware], errorHandler(userCtrl.getAddressById))
 UserRouter.get('/address', [authMiddleware], errorHandler(userCtrl.getAllAddress))
+UserRouter.patch('/', [authMiddleware], errorHandler(userCtrl.updateDefaultUserAddress))
 
 
 UserRouter.get('/', [authMiddleware, adminMiddleware], errorHandler(userCtrl.getAllUsersByAdmin))

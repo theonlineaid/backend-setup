@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 import { prismaClient } from "..";
-import { AddressSchema, SignUpSchema } from "../schemas/users";
-import { User } from "@prisma/client";
+import { AddressSchema, SignUpSchema, UpdateUserAddressSchema } from "../schemas/users";
+import { Address, User } from "@prisma/client";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { BadRequestsException } from "../exceptions/exceptions";
@@ -90,6 +90,53 @@ const userCtrl = {
         })
 
         res.json(addresses)
+
+    },
+
+    updateDefaultUserAddress: async (req: Request, res: Response) => {
+        const validatedData = UpdateUserAddressSchema.parse(req.body)
+        let shippingAddress: Address;
+        let billingAddress: Address;
+        console.log(validatedData)
+        if (validatedData.defaultShippingAddress) {
+            try {
+                shippingAddress = await prismaClient.address.findFirstOrThrow({
+                    where: {
+                        id: validatedData.defaultShippingAddress
+                    }
+                })
+
+            } catch (error) {
+                throw new NotFoundException('Address not found.', ErrorCode.ADDRESS_NOT_FOUND)
+            }
+            if (shippingAddress.userId != req.user.id) {
+                throw new BadRequestsException('Address does not belong to user', ErrorCode.ADDRESS_DOES_NOT_BELONG)
+            }
+        }
+        if (validatedData.defaultBillingAddress) {
+            try {
+                billingAddress = await prismaClient.address.findFirstOrThrow({
+                    where: {
+                        id: validatedData.defaultBillingAddress
+                    }
+                })
+
+            } catch (error) {
+                throw new NotFoundException('Address not found.', ErrorCode.ADDRESS_NOT_FOUND)
+            }
+            if (billingAddress.userId != req.user.id) {
+                throw new BadRequestsException('Address does not belong to user', ErrorCode.ADDRESS_DOES_NOT_BELONG)
+            }
+        }
+
+        const updatedUser = await prismaClient.user.update({
+            where: {
+                id: req.user.id
+            },
+            data: validatedData
+        })
+        res.json(updatedUser)
+
 
     },
 

@@ -7,20 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  role      Role      @default(USER)
-  Address   Address[]
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  email                  String     @unique
+  password               String
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  role                   Role       @default(USER)
+  defaultBillingAddress  Int?
+  defaultShippingAddress Int?
+  Address                Address[]
+  CartItems              CartItem[]
 
   @@map("users")
 }
@@ -32,23 +30,45 @@ model Address {
   city      String
   country   String
   pincode   String
-  type      String
   userId    Int
-  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  type      String
+  user      User     @relation(fields: [userId], references: [id])
 
+  @@index([userId], map: "addresses_userId_fkey")
   @@map("addresses")
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          Int        @id @default(autoincrement())
   name        String
-  description String   @db.Text
+  description String     @db.Text
   price       Decimal
   tags        String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  cartItems   CartItem[]
 
   @@map("products")
+}
+
+model CartItem {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([productId], map: "cart_items_productId_fkey")
+  @@index([userId], map: "cart_items_userId_fkey")
+  @@map("cart_items")
+}
+
+enum Role {
+  ADMIN
+  USER
 }

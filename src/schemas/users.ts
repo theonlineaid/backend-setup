@@ -8,14 +8,14 @@ export const SignUpSchema = z.object({
 
 export const AddressSchema = z.object({
     lineOne: z.string(),
-    lineTwo: z.string().nullable(),
+    lineTwo: z.string().optional(),
     pincode: z.string().length(6),
     type: z.string().max(10),
     country: z.string(),
     city: z.string(),
 })
 
-export const UpdateUserSchema = z.object({
+export const UpdateUserAddressSchema = z.object({
     name: z.string().optional(),
     defaultShippingAddress: z.number().optional(),
     defaultBillingAddress: z.number().optional()

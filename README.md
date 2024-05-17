@@ -1,4 +1,4 @@
-## Command list 
+## Command list
 
 ### Create folder
 
@@ -20,4 +20,6 @@ npx prisma migrate dev --name AddRoleToUser
 npx prisma studio // it will run browser http://localhost:5555
 npx prisma migrate dev --name CreateProductTable
 npx prisma migrate dev --name AddAddressTable
+npx prisma migrate dev --name AddDefaultShippingBillingAddress
+npx prisma migrate dev --name CreateCartTable
 ```
