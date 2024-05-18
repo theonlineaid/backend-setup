@@ -22,4 +22,5 @@ npx prisma migrate dev --name CreateProductTable
 npx prisma migrate dev --name AddAddressTable
 npx prisma migrate dev --name AddDefaultShippingBillingAddress
 npx prisma migrate dev --name CreateCartTable
+npx prisma migrate dev --name CrerateReviewTable
 ```
