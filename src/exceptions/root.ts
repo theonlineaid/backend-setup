@@ -10,7 +10,9 @@ export enum ErrorCode {
     UNAUTHORIZED = 4001,               // Unauthorized access
     PRODUCT_NOT_FOUND = 5001,          // Product not found
     ORDER_NOT_FOUND = 6001,            // Order not found
-    BAD_REQUEST= 5000,                 //
+    BAD_REQUEST = 5000,                //
+    CART_ITEM_NOT_FOUND = 7000,
+    CART_NOT_FOUND = 7001
 }
 
 // Custom HTTP Exception class representing errors in HTTP requests or responses

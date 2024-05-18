@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
 model User {
   id                     Int        @id @default(autoincrement())
   name                   String
@@ -19,6 +24,7 @@ model User {
   defaultShippingAddress Int?
   Address                Address[]
   CartItems              CartItem[]
+  Review                 Review[]
 
   @@map("users")
 }
@@ -49,6 +55,7 @@ model Product {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   cartItems   CartItem[]
+  Review      Review[]
 
   @@map("products")
 }
@@ -68,7 +75,16 @@ model CartItem {
   @@map("cart_items")
 }
 
-enum Role {
-  ADMIN
-  USER
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String
+  productId Int
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
 }

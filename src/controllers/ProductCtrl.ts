@@ -84,7 +84,10 @@ const productCtrl = {
             // Find the product with the specified ID
             const product = await prismaClient.product.findFirst({
                 where: {
-                    id: productId // Pass the product ID as an argument
+                    id: productId
+                },
+                include: {
+                    Review: true // Include the reviews related to this product
                 }
             });
 
