@@ -12,7 +12,8 @@ export enum ErrorCode {
     ORDER_NOT_FOUND = 6001,            // Order not found
     BAD_REQUEST = 5000,                //
     CART_ITEM_NOT_FOUND = 7000,
-    CART_NOT_FOUND = 7001
+    CART_NOT_FOUND = 7001,
+    REVIEW_NOT_FOUND = 8000
 }
 
 // Custom HTTP Exception class representing errors in HTTP requests or responses

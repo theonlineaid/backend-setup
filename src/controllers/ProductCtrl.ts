@@ -87,7 +87,7 @@ const productCtrl = {
                     id: productId
                 },
                 include: {
-                    Review: true // Include the reviews related to this product
+                    reviews: true // Include the reviews related to this product
                 }
             });
 
