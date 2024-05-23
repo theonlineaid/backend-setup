@@ -3,6 +3,7 @@ import { prismaClient } from '..';
 import { NotFoundException } from '../exceptions/notFound';
 import { ErrorCode } from '../exceptions/root';
 import { ReviewSchema, UpdateReviewSchema } from '../schemas/review';
+import path from 'path';
 
 const reviewCtrl = {
     addReview: async (req: Request, res: Response) => {
@@ -15,6 +16,8 @@ const reviewCtrl = {
             // Convert productId to a number
             const productIdNum = productId;
 
+            const imagePath = req.file ? req.file.path.replace(/\\/g, '/') : null; // Replace backslashes with forward slashes
+
             // Find the product with the specified ID
             const product = await prismaClient.product.findFirst({
                 where: { id: productIdNum },
@@ -25,6 +28,15 @@ const reviewCtrl = {
                 throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
             }
 
+            if (!req.file) {
+                return res.status(400).json({ error: 'No file uploaded' });
+            }
+
+            // Extract the extension name from the original file name
+            const extensionName = path.extname(req.file.originalname);
+
+            console.log(extensionName)
+
             // Create the review for the product
             const review = await prismaClient.review.create({
                 data: {
@@ -32,6 +44,7 @@ const reviewCtrl = {
                     comment,
                     productId: productIdNum, // Use the parsed product ID
                     userId,
+                    imagePath
                 },
             });
 
