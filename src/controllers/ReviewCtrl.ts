@@ -4,6 +4,7 @@ import { NotFoundException } from '../exceptions/notFound';
 import { ErrorCode } from '../exceptions/root';
 import { ReviewSchema, UpdateReviewSchema } from '../schemas/review';
 import path from 'path';
+import fs from 'fs';
 
 const reviewCtrl = {
     addReview: async (req: Request, res: Response) => {
@@ -74,6 +75,26 @@ const reviewCtrl = {
                 throw new NotFoundException('You are not authorized to delete this review.', ErrorCode.UNAUTHORIZED);
             }
 
+            // if (review.imagePath) {
+            //     fs.unlinkSync(path.resolve(review.imagePath)); // Delete the file from the server
+            // }
+
+            // Log the imagePath for debugging
+            console.log('Review imagePath:', review.imagePath);
+
+            if (review.imagePath) {
+                // Check if the file exists on the server
+                if (fs.existsSync(review.imagePath)) {
+                    // Delete the file from the server
+                    fs.unlinkSync(review.imagePath);
+                    console.log('File deleted:', review.imagePath);
+                } else {
+                    console.log('File not found:', review.imagePath);
+                }
+            } else {
+                console.log('No imagePath found in review.');
+            }
+
             // Delete the review
             await prismaClient.review.delete({
                 where: { id: reviewId },
@@ -107,6 +128,20 @@ const reviewCtrl = {
             if (review.userId !== userId) {
                 throw new NotFoundException('You are not authorized to edit this review.', ErrorCode.UNAUTHORIZED);
             }
+
+            let updatedReviewData = { ...validatedData };
+
+            // If there's a new image uploaded, update the imagePath in the review data
+            if (req.file) {
+                const imagePath = req.file.path.replace(/\\/g, '/');
+                updatedReviewData = { ...updatedReviewData, imagePath };
+
+                // If the existing review had an image, delete the old image file
+                if (review.imagePath) {
+                    fs.unlinkSync(path.resolve(review.imagePath)); // Delete the file from the server
+                }
+            }
+
 
             // Update the review
             const updatedReview = await prismaClient.review.update({
