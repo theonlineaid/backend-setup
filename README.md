@@ -27,5 +27,4 @@ npx prisma migrate dev --name CreateReviewTable --create-only
 npx prisma migrate dev // Your database is now in sync with your schema.
 npx prisma migrate dev --name add_imagePath_to_reviews
 npx prisma migrate dev --name update_review_rating_string
-npx prisma migrate dev --name CreateOrderTable
 ```

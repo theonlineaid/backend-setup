@@ -1,24 +1,31 @@
-import { NextFunction, Request, Response } from "express";
-import multer from "multer";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
-// Set up Multer for banner uploads
-const bannerUpload = multer({ dest: 'uploads/banners/' });
-
-// Middleware function for handling banner uploads
-function handleBannerUpload(req: Request, res:Response, next:NextFunction) {
-  bannerUpload.single('bannerImage')(req, res, function(err) {
-    if (err instanceof multer.MulterError) {
-      // Multer error occurred (e.g., file size exceeded)
-      return res.status(400).json({ error: err.message });
-    } else if (err) {
-      // Other error occurred
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-    
-    // No errors, continue to the next middleware/route handler
-    next();
+const createUploadImage = (destination: string) => {
+  const UploadImage = multer({
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5 MB file size limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+        return cb(new Error('Only image files are allowed'));
+      }
+      cb(null, true);
+    },
+    storage: multer.diskStorage({
+      destination: function (req, file, cb) {
+        // Create the directory if it doesn't exist
+        fs.mkdirSync(destination, { recursive: true });
+        cb(null, destination);
+      },
+      filename: function (req, file, cb) {
+        cb(null, `${Date.now()}${path.extname(file.originalname)}`);
+      },
+    }),
   });
-}
 
-export default handleBannerUpload;
+  return UploadImage;
+};
 
+export default createUploadImage;

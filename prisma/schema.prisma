@@ -88,10 +88,11 @@ model CartItem {
 
 model Review {
   id        Int      @id @default(autoincrement())
-  rating    Int
+  rating    String
   comment   String
   productId Int
   userId    Int
+  imagePath String?
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
   product   Product  @relation(fields: [productId], references: [id])
