@@ -20,13 +20,7 @@ enum OrderEventStatus {
   CANCELLED
 }
 
-enum OrderEventStatus {
-  PENDING
-  ACCEPTED
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-}
+
 
 model User {
   id                     Int        @id @default(autoincrement())
@@ -73,7 +67,6 @@ model Product {
   updatedAt    DateTime       @updatedAt
   cartItems    CartItem[]
   reviews      Review[]
-  OrderProduct OrderProduct[]
 
   orders OrderProduct[]
 
@@ -139,45 +132,6 @@ model OrderProduct {
 
   @@map("order_products")
 }
-
-model OrderEvent {
-  id        Int              @id @default(autoincrement())
-  orderId   Int
-  order     Order            @relation(fields: [orderId], references: [id])
-  status    OrderEventStatus @default(PENDING)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-
-  @@map("order_events")
-}
-
-model Order {
-  id           Int            @id @default(autoincrement())
-  userId       Int
-  user         User           @relation(fields: [userId], references: [id])
-  netAmount    Decimal
-  address      String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  OrderProduct OrderProduct[]
-  OrderEvent   OrderEvent[]
-
-  @@map("orders")
-}
-
-model OrderProduct {
-  id        Int      @id @default(autoincrement())
-  orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  productId Int
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("order_products")
-}
-
 model OrderEvent {
   id         Int              @id @default(autoincrement())
   orderId    Int
