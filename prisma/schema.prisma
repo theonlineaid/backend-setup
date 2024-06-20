@@ -20,8 +20,6 @@ enum OrderEventStatus {
   CANCELLED
 }
 
-
-
 model User {
   id                     Int        @id @default(autoincrement())
   name                   String
