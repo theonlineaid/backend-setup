@@ -7,9 +7,10 @@ import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { BadRequestsException } from "../exceptions/exceptions";
 import { SignUpSchema } from "../schemas/users";
-import parser from 'ua-parser-js';
+import parser, { IResult } from 'ua-parser-js';
 import axios from 'axios';
 import { getPublicIp } from "../utils/getPublicIp";
+import DeviceDetector from "device-detector-js";
 
 const authCtrl = {
 
@@ -25,8 +26,18 @@ const authCtrl = {
             new BadRequestsException('User already exist.', ErrorCode.USER_ALREADY_EXISTS)
         }
         const userAgentString = req.headers['user-agent'];
-        const userAgentInfo = parser(userAgentString);
+        const userAgentInfo: IResult = parser(userAgentString);
 
+        const deviceDetector = new DeviceDetector();
+        const userAgent = userAgentInfo.ua
+        const deviceInfo = deviceDetector.parse(userAgent);
+
+        userAgentInfo.device = {
+            model: deviceInfo.device?.model || '',
+            type: deviceInfo.device?.type || '',
+            vendor: deviceInfo.device?.brand || '',
+        };
+        
         // Get the public IP address
         let publicIp = '';
         try {
