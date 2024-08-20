@@ -1,4 +1,3 @@
-## Command list
 
 ### Create folder
 
@@ -7,6 +6,8 @@ mkdir ecommerce && cd ecommerce && npm init -y
 touch .gitignore
 ```
 
+
+## Prisma Setup
 ```
 npm i typescript --save-dev
 npx tsc --init
@@ -15,9 +16,12 @@ npm i express
 npm i @types/express --save-dev
 npm i prisma @prisma/client
 npx prisma init
+npx prisma migrate reset
+npx prisma migrate reset --force --skip-generate
+npx prisma migrate dev --name initial-setup
 npx prisma migrate dev --name CreateUserTable
 npx prisma migrate dev --name AddRoleToUser
-npx prisma studio // it will run browser http://localhost:5555
+npx prisma studio                                                 // it will run browser http://localhost:5555
 npx prisma migrate dev --name CreateProductTable
 npx prisma migrate dev --name AddAddressTable
 npx prisma migrate dev --name AddDefaultShippingBillingAddress

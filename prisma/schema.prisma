@@ -25,11 +25,22 @@ model User {
   name                   String
   email                  String     @unique
   password               String
+  profileImage           String? // URL or path to profile image
+  coverImage             String? // URL or path to cover image
+  bio                    String? // Short bio about the user
+  ssn                    String? // Social Security Number
+  phoneNumber            String? // User's phone number
+  dateOfBirth            DateTime? // User's date of birth
+  gender                 String? // Gender of the user
+  address                String? // Physical address (if not stored separately)
+  defaultBillingAddress  Int?
+  defaultShippingAddress Int?
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
   role                   Role       @default(USER)
-  defaultBillingAddress  Int?
-  defaultShippingAddress Int?
+  userAgentInfo          Json? // Information about the user's device and browser
+  ipAddress              String? // New field
+  location               Json? // New field
   Address                Address[]
   cartItems              CartItem[]
   reviews                Review[]
@@ -56,15 +67,15 @@ model Address {
 }
 
 model Product {
-  id           Int            @id @default(autoincrement())
-  name         String
-  description  String         @db.Text
-  price        Decimal
-  tags         String
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  cartItems    CartItem[]
-  reviews      Review[]
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String     @db.Text
+  price       Decimal
+  tags        String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  cartItems   CartItem[]
+  reviews     Review[]
 
   orders OrderProduct[]
 
@@ -130,6 +141,7 @@ model OrderProduct {
 
   @@map("order_products")
 }
+
 model OrderEvent {
   id         Int              @id @default(autoincrement())
   orderId    Int

@@ -1,35 +1,74 @@
 import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
-
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../utils/secret";
+import { IPINFO_TOKEN, JWT_SECRET } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { BadRequestsException } from "../exceptions/exceptions";
 import { SignUpSchema } from "../schemas/users";
+import parser from 'ua-parser-js';
+import axios from 'axios';
+import { getPublicIp } from "../utils/getPublicIp";
 
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
 
         SignUpSchema.parse(req.body)
-        const { email, password, name } = req.body;
+        // Destructure the necessary fields from the request body
+        const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
 
         let user = await prismaClient.user.findFirst({ where: { email: email } })
 
         if (user) {
             new BadRequestsException('User already exist.', ErrorCode.USER_ALREADY_EXISTS)
         }
+        const userAgentString = req.headers['user-agent'];
+        const userAgentInfo = parser(userAgentString);
+
+        // Get the public IP address
+        let publicIp = '';
+        try {
+            publicIp = await getPublicIp();
+            console.log("Public IP Address:", publicIp);
+        } catch (err: any) {
+            console.error('Error fetching public IP:', err.message);
+        }
+
+        // Optional: Get additional location details
+        let location = null;
+        if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
+            try {
+                const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
+                console.log("IPinfo Response:", response.data);
+                location = response.data;
+            } catch (err: any) {
+                console.error('Error fetching location:', err.message);
+            }
+        } else {
+            console.log("Local IP address detected, skipping location lookup.");
+        }
+
         user = await prismaClient.user.create({
             data: {
                 email,
                 password: hashSync(password, 10),
-                name
+                name,
+                bio: bio || '', // Default to an empty string if bio is not provided
+                ssn,
+                phoneNumber,
+                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null, // Convert dateOfBirth to a Date object
+                gender,
+                userAgentInfo,
+                ipAddress: publicIp, // Store IP address
+                location
             }
         })
 
         res.json(user)
+
+
     },
 
     login: async (req: Request, res: Response) => {
