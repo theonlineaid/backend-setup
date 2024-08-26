@@ -2,6 +2,7 @@ import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
+import { uuid } from 'uuidv4';
 import { IPINFO_TOKEN, JWT_SECRET } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
@@ -15,69 +16,155 @@ import DeviceDetector from "device-detector-js";
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
-
-        SignUpSchema.parse(req.body)
-        // Destructure the necessary fields from the request body
-        const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
-
-        let user = await prismaClient.user.findFirst({ where: { email: email } })
-
-        if (user) {
-            new BadRequestsException('User already exist.', ErrorCode.USER_ALREADY_EXISTS)
-        }
-        const userAgentString = req.headers['user-agent'];
-        const userAgentInfo: IResult = parser(userAgentString);
-
-        const deviceDetector = new DeviceDetector();
-        const userAgent = userAgentInfo.ua
-        const deviceInfo = deviceDetector.parse(userAgent);
-
-        userAgentInfo.device = {
-            model: deviceInfo.device?.model || '',
-            type: deviceInfo.device?.type || '',
-            vendor: deviceInfo.device?.brand || '',
-        };
-        
-        // Get the public IP address
-        let publicIp = '';
         try {
-            publicIp = await getPublicIp();
-            console.log("Public IP Address:", publicIp);
-        } catch (err: any) {
-            console.error('Error fetching public IP:', err.message);
-        }
+            // Validate request body against the schema
+            SignUpSchema.parse(req.body);
 
-        // Optional: Get additional location details
-        let location = null;
-        if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
+            // Destructure the necessary fields from the request body
+            const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
+
+            // Check if the user already exists
+            let user = await prismaClient.user.findFirst({ where: { email: email } });
+
+            if (user) throw new BadRequestsException('User already exists.', ErrorCode.USER_ALREADY_EXISTS);
+
+
+            // Parse user agent information
+            const userAgentString = req.headers['user-agent'] || '';
+            const userAgentInfo: IResult = parser(userAgentString);
+
+            const deviceDetector = new DeviceDetector();
+            const userAgent = userAgentInfo.ua;
+            const deviceInfo = deviceDetector.parse(userAgent);
+
+            // Update userAgentInfo with device details
+            userAgentInfo.device = {
+                model: deviceInfo.device?.model || '',
+                type: deviceInfo.device?.type || '',
+                vendor: deviceInfo.device?.brand || '',
+            };
+
+            // Get the public IP address
+            let publicIp = '';
             try {
-                const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
-                console.log("IPinfo Response:", response.data);
-                location = response.data;
+                publicIp = await getPublicIp();
             } catch (err: any) {
-                console.error('Error fetching location:', err.message);
+                console.error('Error fetching public IP:', err.message);
             }
-        } else {
-            console.log("Local IP address detected, skipping location lookup.");
+
+            // Get additional location details based on IP address
+            let location = null;
+            if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
+                try {
+                    const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
+                    location = response.data;
+                } catch (err: any) {
+                    console.error('Error fetching location:', err.message);
+                }
+            }
+
+            // Create a new user in the database
+            user = await prismaClient.user.create({
+                data: {
+                    email,
+                    password: hashSync(password, 10),
+                    name,
+                    bio: bio || '', // Default to an empty string if bio is not provided
+                    ssn,
+                    phoneNumber,
+                    dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null, // Convert dateOfBirth to a Date object
+                    gender,
+                    userAgentInfo,
+                    ipAddress: publicIp, // Store IP address
+                    location
+                }
+            });
+
+            // Send success response
+            res.status(201).json({
+                message: "Successfully create a user",
+                status: "Success",
+                user: user,
+                timestamp: new Date().toISOString(),
+                requestId: uuid(),  // Include a unique request ID if needed
+                metadata: {
+                    serverTime: new Date().toISOString()
+                }
+            });
+
+        } catch (error: any) {
+            // Send error response in JSON format
+            if (error instanceof BadRequestsException) {
+                res.status(400).json({ message: error.message });
+            } else {
+                res.status(500).json({ message: 'Internal server error' });
+            }
         }
 
-        user = await prismaClient.user.create({
-            data: {
-                email,
-                password: hashSync(password, 10),
-                name,
-                bio: bio || '', // Default to an empty string if bio is not provided
-                ssn,
-                phoneNumber,
-                dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null, // Convert dateOfBirth to a Date object
-                gender,
-                userAgentInfo,
-                ipAddress: publicIp, // Store IP address
-                location
-            }
-        })
+        // SignUpSchema.parse(req.body)
+        // // Destructure the necessary fields from the request body
+        // const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
 
-        res.json(user)
+        // let user = await prismaClient.user.findFirst({ where: { email: email } })
+
+        // // console.log(user)
+
+        // if (user) {
+        //     throw new BadRequestsException('User already exist.', ErrorCode.USER_ALREADY_EXISTS);
+        // }
+        // const userAgentString = req.headers['user-agent'];
+        // const userAgentInfo: IResult = parser(userAgentString);
+
+        // const deviceDetector = new DeviceDetector();
+        // const userAgent = userAgentInfo.ua
+        // const deviceInfo = deviceDetector.parse(userAgent);
+
+        // userAgentInfo.device = {
+        //     model: deviceInfo.device?.model || '',
+        //     type: deviceInfo.device?.type || '',
+        //     vendor: deviceInfo.device?.brand || '',
+        // };
+
+        // // Get the public IP address
+        // let publicIp = '';
+        // try {
+        //     publicIp = await getPublicIp();
+        //     // console.log("Public IP Address:", publicIp);
+        // } catch (err: any) {
+        //     console.error('Error fetching public IP:', err.message);
+        // }
+
+        // // Optional: Get additional location details
+        // let location = null;
+        // if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
+        //     try {
+        //         const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
+        //         console.log("IPinfo Response:", response.data);
+        //         location = response.data;
+        //     } catch (err: any) {
+        //         console.error('Error fetching location:', err.message);
+        //     }
+        // } else {
+        //     console.log("Local IP address detected, skipping location lookup.");
+        // }
+
+        // user = await prismaClient.user.create({
+        //     data: {
+        //         email,
+        //         password: hashSync(password, 10),
+        //         name,
+        //         bio: bio || '', // Default to an empty string if bio is not provided
+        //         ssn,
+        //         phoneNumber,
+        //         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null, // Convert dateOfBirth to a Date object
+        //         gender,
+        //         userAgentInfo,
+        //         ipAddress: publicIp, // Store IP address
+        //         location
+        //     }
+        // })
+
+        // res.json(user)
 
 
     },
