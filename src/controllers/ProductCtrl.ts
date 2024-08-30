@@ -55,26 +55,72 @@ const productCtrl = {
 
     },
 
-
     getAllProducts: async (req: Request, res: Response) => {
-        // Get the value of 'skip' from the query parameters or default to 0
-        const skip = req.query.skip ? +req.query.skip : 0;
+        try {
+            // Get the value of 'skip' from the query parameters or default to 0
+            const skip = req.query.skip ? +req.query.skip : 0;
 
-        // Count the total number of products
-        const count = await prismaClient.product.count();
+            // Count the total number of products
+            const count = await prismaClient.product.count();
 
-        // Fetch products with pagination
-        const products = await prismaClient.product.findMany({
-            skip: skip,
-            take: 5 // initially show only five 
-        });
+            // Fetch products with pagination
+            const products = await prismaClient.product.findMany({
+                skip: skip,
+                take: 5 // initially show only five 
+            });
 
-        // Send the response with product count and data
-        res.json({
-            count: count,
-            data: products
-        });
+            // Send the response with product count and data
+            res.json({
+                count: count,
+                data: products
+            });
 
+        } catch (error) {
+            res.status(500).json({ error: 'Internal Server Error' });
+            throw new NotFoundException('Products not found.', ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+    },
+
+    searchProducts: async (req: Request, res: Response) => {
+        try {
+            // Get the search query from the request parameters
+            const searchQuery = req.query.q?.toString();
+
+            // Get pagination options from query parameters or use defaults
+            const skip = req.query?.skip ? +req.query?.skip : 0;
+            const take = req.query.take ? +req.query.take : 5;
+
+            // Find products that match the search query
+            const products = await prismaClient.product.findMany({
+                where: {
+                    name: {
+                        search: searchQuery
+                    },
+                    description: {
+                        search: searchQuery,
+                    },
+                    tags: {
+                        search: searchQuery,
+                    }
+                },
+
+                skip: skip,
+                take: take,
+            });
+
+            if (!products || products.length === 0) {
+                throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            // Send the response with the search results
+            res.json({ products });
+
+        } catch (error) {
+            res.status(500).json({ error: 'Internal Server Error to try search' });
+            console.error(error)
+            throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        console.log("search product ======================")
     },
 
     getSingleProduct: async (req: Request, res: Response) => {
@@ -98,45 +144,11 @@ const productCtrl = {
             res.json(product);
         } catch (error) {
             res.status(500).json({ error: 'Internal Server Error' });
+            throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
         }
+
+        console.log("Single product ======================")
     },
-
-    searchProducts: async (req: Request, res: Response) => {
-        // Get the search query from the request parameters
-        // const searchQuery = req.query.q?.toString() || '';
-        const searchQuery = req.query.q?.toString();
-
-        // Get pagination options from query parameters or use defaults
-        const skip = req.query.skip ? +req.query.skip : 0;
-        const take = req.query.take ? +req.query.take : 5;
-
-        // Find products that match the search query
-        const products = await prismaClient.product.findMany({
-            where: {
-                name: {
-                    search: searchQuery
-                },
-                description: {
-                    search: searchQuery,
-                },
-                tags: {
-                    search: searchQuery,
-                }
-
-                // OR: [
-                //     { name: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
-                //     { description: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
-                //     { : { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
-                // ],
-            },
-            skip: skip,
-            take: take,
-        });
-
-
-        // Send the response with the search results
-        res.json(products);
-    }
 
 
 };

@@ -141,7 +141,6 @@ const userCtrl = {
     },
 
     // ========= User relate functions by admin =========
-
     getAllUsersByAdmin: async (req: Request, res: Response) => {
 
         // --> /users will return the first five users. or users?skip=0
@@ -151,7 +150,7 @@ const userCtrl = {
             skip: req.query.skip ? +req.query.skip : 0,
             take: 5,
 
-            // We dont need password 
+            // We don't need password 
             select: {
                 id: true,
                 name: true,
@@ -160,7 +159,6 @@ const userCtrl = {
                 updatedAt: true,
                 role: true,
                 password: false
-
             }
         })
         res.json(users)
