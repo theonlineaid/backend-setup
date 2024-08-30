@@ -142,7 +142,8 @@ const orderCtrl = {
     },
 
 
-    // Admin route user cant access those below routes
+    // Admin route user can't access those below routes
+    // @admin route 
     listAllOrders: async (req: Request, res: Response) => {
         let whereClause = {}
         const status = req.query.status
@@ -163,6 +164,7 @@ const orderCtrl = {
         res.json(orders)
     },
 
+    // @admin route 
     changeStatus: async (req: Request, res: Response) => {
         // wrap it inside transaction
         try {
@@ -187,6 +189,7 @@ const orderCtrl = {
 
     },
 
+    // @admin route 
     listUserOrders: async (req: Request, res: Response) => {
         let whereClause: any = {
             userId: +req.params.id

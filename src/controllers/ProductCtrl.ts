@@ -101,31 +101,42 @@ const productCtrl = {
         }
     },
 
-    // searchProducts: async (req: Request, res: Response) => {
-    //     // Get the search query from the request parameters
-    //     const searchQuery = req.query.q?.toString() || '';
+    searchProducts: async (req: Request, res: Response) => {
+        // Get the search query from the request parameters
+        // const searchQuery = req.query.q?.toString() || '';
+        const searchQuery = req.query.q?.toString();
 
-    //     // Get pagination options from query parameters or use defaults
-    //     const skip = req.query.skip ? +req.query.skip : 0;
-    //     const take = req.query.take ? +req.query.take : 5;
+        // Get pagination options from query parameters or use defaults
+        const skip = req.query.skip ? +req.query.skip : 0;
+        const take = req.query.take ? +req.query.take : 5;
 
-    //     // Find products that match the search query
-    //     const products = await prismaClient.product.findMany({
-    //         where: {
-    //             OR: [
-    //                 { name: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } as CustomStringFilter },
-    //                 { description: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } as CustomStringFilter },
-    //                 { tags: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } as CustomStringFilter },
-    //             ],
-    //         },
-    //         skip: skip,
-    //         take: take,
-    //     });
+        // Find products that match the search query
+        const products = await prismaClient.product.findMany({
+            where: {
+                name: {
+                    search: searchQuery
+                },
+                description: {
+                    search: searchQuery,
+                },
+                tags: {
+                    search: searchQuery,
+                }
+
+                // OR: [
+                //     { name: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
+                //     { description: { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
+                //     { : { contains: searchQuery, mode: 'insensitive' as 'insensitive' } },
+                // ],
+            },
+            skip: skip,
+            take: take,
+        });
 
 
-    //     // Send the response with the search results
-    //     res.json(products);
-    // }
+        // Send the response with the search results
+        res.json(products);
+    }
 
 
 };
