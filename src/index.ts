@@ -1,3 +1,4 @@
+import { swaggerSpec, swaggerUi } from '../docs/swaggerSpec';
 import express, { Express } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { errorMiddleware } from './middlewares/error';
@@ -12,12 +13,13 @@ app.use(express.json());
 app.use(cors())
 app.use(errorMiddleware);
 app.use('/api', RootRouter)
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export const prismaClient = new PrismaClient({
     log: ['query']
 }).$extends({
-    result:{
-        address:{
+    result: {
+        address: {
             formattedAddress: {
                 needs: {
                     lineOne: true,

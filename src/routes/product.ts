@@ -11,6 +11,6 @@ ProductRouter.get('/', errorHandler(productCtrl.getAllProducts))
 ProductRouter.patch('/:id', [authMiddleware, adminMiddleware], errorHandler(productCtrl.updateProduct))
 ProductRouter.delete('/:id', [authMiddleware, adminMiddleware], errorHandler(productCtrl.deleteProduct))
 ProductRouter.get('/:id', errorHandler(productCtrl.getSingleProduct))
-// ProductRouter.get('/search', errorHandler(productCtrl.searchProducts))
+ProductRouter.get('/search', errorHandler(productCtrl.searchProducts))
 
 export default ProductRouter;
