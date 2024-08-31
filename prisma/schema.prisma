@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -8,44 +8,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
-enum OrderEventStatus {
-  PENDING
-  ACCEPTED
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-}
-
 model User {
   id                     Int        @id @default(autoincrement())
   name                   String
   email                  String     @unique
   password               String
-  profileImage           String? // URL or path to profile image
-  coverImage             String? // URL or path to cover image
-  bio                    String? // Short bio about the user
-  ssn                    String? // Social Security Number
-  phoneNumber            String? // User's phone number
-  dateOfBirth            DateTime? // User's date of birth
-  gender                 String? // Gender of the user
-  address                String? // Physical address (if not stored separately)
+  profileImage           String?
+  coverImage             String?
+  bio                    String?
+  ssn                    String?
+  phoneNumber            String?
+  dateOfBirth            DateTime?
+  gender                 String?
+  address                String?
   defaultBillingAddress  Int?
   defaultShippingAddress Int?
   createdAt              DateTime   @default(now())
   updatedAt              DateTime   @updatedAt
   role                   Role       @default(USER)
-  userAgentInfo          Json? // Information about the user's device and browser
-  ipAddress              String? // New field
-  location               Json? // New field
+  userAgentInfo          Json?
+  ipAddress              String?
+  location               Json?
   Address                Address[]
   cartItems              CartItem[]
-  reviews                Review[]
   orders                 Order[]
+  reviews                Review[]
 
   @@map("users")
 }
@@ -68,17 +55,16 @@ model Address {
 }
 
 model Product {
-  id          Int        @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
-  description String     @db.Text
+  description String         @db.Text
   price       Decimal
   tags        String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   cartItems   CartItem[]
+  orders      OrderProduct[]
   reviews     Review[]
-
-  orders OrderProduct[]
 
   @@fulltext([name, description, tags])
   @@map("products")
@@ -112,47 +98,66 @@ model Review {
   product   Product  @relation(fields: [productId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
 
+  @@index([productId], map: "reviews_productId_fkey")
+  @@index([userId], map: "reviews_userId_fkey")
   @@map("reviews")
 }
 
 model Order {
   id        Int              @id @default(autoincrement())
   userId    Int
-  user      User             @relation(fields: [userId], references: [id])
   netAmount Decimal
   address   String
   status    OrderEventStatus @default(PENDING)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
+  events    OrderEvent[]
+  products  OrderProduct[]
+  user      User             @relation(fields: [userId], references: [id])
 
-  products OrderProduct[]
-  events   OrderEvent[]
-
+  @@index([userId], map: "orders_userId_fkey")
   @@map("orders")
 }
 
 model OrderProduct {
   id        Int      @id @default(autoincrement())
   orderId   Int
-  order     Order    @relation(fields: [orderId], references: [id])
   productId Int
-  product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
 
+  @@index([orderId], map: "order_products_orderId_fkey")
+  @@index([productId], map: "order_products_productId_fkey")
   @@map("order_products")
 }
 
 model OrderEvent {
   id         Int              @id @default(autoincrement())
   orderId    Int
-  order      Order            @relation(fields: [orderId], references: [id])
   status     OrderEventStatus @default(PENDING)
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
-  CartItem   CartItem?        @relation(fields: [cartItemId], references: [id])
   cartItemId Int?
+  CartItem   CartItem?        @relation(fields: [cartItemId], references: [id])
+  order      Order            @relation(fields: [orderId], references: [id])
 
+  @@index([cartItemId], map: "order_events_cartItemId_fkey")
+  @@index([orderId], map: "order_events_orderId_fkey")
   @@map("order_events")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderEventStatus {
+  PENDING
+  ACCEPTED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
 }

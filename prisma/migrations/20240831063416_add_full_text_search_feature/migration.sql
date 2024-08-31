@@ -80,6 +80,8 @@ CREATE TABLE `reviews` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `reviews_productId_fkey`(`productId`),
+    INDEX `reviews_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -93,6 +95,7 @@ CREATE TABLE `orders` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `orders_userId_fkey`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -105,6 +108,8 @@ CREATE TABLE `order_products` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    INDEX `order_products_orderId_fkey`(`orderId`),
+    INDEX `order_products_productId_fkey`(`productId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -117,6 +122,8 @@ CREATE TABLE `order_events` (
     `updatedAt` DATETIME(3) NOT NULL,
     `cartItemId` INTEGER NULL,
 
+    INDEX `order_events_cartItemId_fkey`(`cartItemId`),
+    INDEX `order_events_orderId_fkey`(`orderId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -145,7 +152,7 @@ ALTER TABLE `order_products` ADD CONSTRAINT `order_products_orderId_fkey` FOREIG
 ALTER TABLE `order_products` ADD CONSTRAINT `order_products_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `order_events` ADD CONSTRAINT `order_events_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `orders`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `order_events` ADD CONSTRAINT `order_events_cartItemId_fkey` FOREIGN KEY (`cartItemId`) REFERENCES `cart_items`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `order_events` ADD CONSTRAINT `order_events_cartItemId_fkey` FOREIGN KEY (`cartItemId`) REFERENCES `cart_items`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `order_events` ADD CONSTRAINT `order_events_orderId_fkey` FOREIGN KEY (`orderId`) REFERENCES `orders`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
