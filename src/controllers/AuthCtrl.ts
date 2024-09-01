@@ -100,73 +100,6 @@ const authCtrl = {
                 res.status(500).json({ message: 'Internal server error' });
             }
         }
-
-        // SignUpSchema.parse(req.body)
-        // // Destructure the necessary fields from the request body
-        // const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
-
-        // let user = await prismaClient.user.findFirst({ where: { email: email } })
-
-        // // console.log(user)
-
-        // if (user) {
-        //     throw new BadRequestsException('User already exist.', ErrorCode.USER_ALREADY_EXISTS);
-        // }
-        // const userAgentString = req.headers['user-agent'];
-        // const userAgentInfo: IResult = parser(userAgentString);
-
-        // const deviceDetector = new DeviceDetector();
-        // const userAgent = userAgentInfo.ua
-        // const deviceInfo = deviceDetector.parse(userAgent);
-
-        // userAgentInfo.device = {
-        //     model: deviceInfo.device?.model || '',
-        //     type: deviceInfo.device?.type || '',
-        //     vendor: deviceInfo.device?.brand || '',
-        // };
-
-        // // Get the public IP address
-        // let publicIp = '';
-        // try {
-        //     publicIp = await getPublicIp();
-        //     // console.log("Public IP Address:", publicIp);
-        // } catch (err: any) {
-        //     console.error('Error fetching public IP:', err.message);
-        // }
-
-        // // Optional: Get additional location details
-        // let location = null;
-        // if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
-        //     try {
-        //         const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
-        //         console.log("IPinfo Response:", response.data);
-        //         location = response.data;
-        //     } catch (err: any) {
-        //         console.error('Error fetching location:', err.message);
-        //     }
-        // } else {
-        //     console.log("Local IP address detected, skipping location lookup.");
-        // }
-
-        // user = await prismaClient.user.create({
-        //     data: {
-        //         email,
-        //         password: hashSync(password, 10),
-        //         name,
-        //         bio: bio || '', // Default to an empty string if bio is not provided
-        //         ssn,
-        //         phoneNumber,
-        //         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null, // Convert dateOfBirth to a Date object
-        //         gender,
-        //         userAgentInfo,
-        //         ipAddress: publicIp, // Store IP address
-        //         location
-        //     }
-        // })
-
-        // res.json(user)
-
-
     },
 
     login: async (req: Request, res: Response) => {
@@ -182,22 +115,49 @@ const authCtrl = {
 
         if (!email) throw new NotFoundException('Please give your email.', ErrorCode.USER_NOT_FOUND)
 
-
-        const access = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '15d' })
-        const refresh = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-
+        const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' });
+        const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+    
+        // Set tokens in cookies
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+        });
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
         const token = {
-            access,
-            refresh
+            accessToken,
+            refreshToken
         }
+
+
+        // const access = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' })
+        // const refresh = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+        // const token = {
+        //     access,
+        //     refresh
+        // }
+        // res.json({ user, token })
+
 
         res.json({ user, token })
     },
 
-    logout: async (req: Request, res: Response) => {
-        res.clearCookie('jwtToken');
+    // logout: async (req: Request, res: Response) => {
+    //     res.clearCookie('jwtToken');
 
-        res.json({ message: "Logout successful" });
+    //     res.json({ message: "Logout successful" });
+    // },
+
+    logout:  async (req: Request, res: Response) => {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        res.json({ message: 'Logout successful' });
     },
 
     me: async (req: Request, res: Response) => {

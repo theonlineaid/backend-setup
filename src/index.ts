@@ -1,5 +1,6 @@
 import { swaggerSpec, swaggerUi } from '../docs/swaggerSpec';
 import express, { Express } from 'express';
+import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import { errorMiddleware } from './middlewares/error';
 import { PORT } from './utils/secret';
@@ -10,7 +11,13 @@ const app: Express = express();
 
 // Middleware 
 app.use(express.json());
-app.use(cors())
+// app.use(cors())
+app.use(cors({
+    origin: 'http://localhost:5173', // Replace with your frontend URL
+    methods: 'GET,POST,PUT,PATCH,DELETE',
+    credentials: true, // Enable cookies and credentials
+}));
+app.use(cookieParser());
 app.use(errorMiddleware);
 app.use('/api', RootRouter)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
