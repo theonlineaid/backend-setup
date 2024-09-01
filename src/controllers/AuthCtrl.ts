@@ -103,6 +103,7 @@ const authCtrl = {
     },
 
     login: async (req: Request, res: Response) => {
+       try {
         const { email, password } = req.body;
 
         let user = await prismaClient.user.findFirst({ where: { email } })
@@ -144,8 +145,18 @@ const authCtrl = {
         // }
         // res.json({ user, token })
 
-
         res.json({ user, token })
+
+
+       } catch (error: any) {
+            if (error instanceof NotFoundException || error instanceof BadRequestsException) {
+                // Handle known errors
+                res.status(400).json({ message: error.message });
+            } else {
+                // Handle unexpected errors
+               res.status(500).json({ message: 'Internal server error' });
+            }
+        }
     },
 
     // logout: async (req: Request, res: Response) => {

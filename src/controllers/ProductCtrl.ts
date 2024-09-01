@@ -149,8 +149,6 @@ const productCtrl = {
 
         console.log("Single product ======================")
     },
-
-
 };
 
 export default productCtrl;
