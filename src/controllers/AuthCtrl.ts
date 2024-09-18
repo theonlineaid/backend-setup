@@ -1,41 +1,45 @@
 import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
-import jwt from "jsonwebtoken";
 import { v4 as uuid } from 'uuid';
-import { IPINFO_TOKEN, JWT_SECRET } from "../utils/secret";
+import { JWT_SECRET } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { BadRequestsException } from "../exceptions/exceptions";
 import { SignUpSchema } from "../schemas/users";
-import parser, { IResult } from 'ua-parser-js';
-import axios from 'axios';
-import { getPublicIp } from "../utils/getPublicIp";
-import DeviceDetector from "device-detector-js";
-import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
-import { InternalException } from "../exceptions/internalException";
 import { ZodError } from 'zod';
+import { getPublicIpAndLocation, getUserAgentInfo } from "../utils/userUtils";
+import jwt from "jsonwebtoken";
+import multer from 'multer';
+import path from 'path';
+import { createUserFolder } from "../utils/fileUtils";
+
+
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Destination folder logic can be defined here
+        cb(null, path.join(__dirname, '..', 'uploads')); // Root folder for uploads
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.originalname);
+    }
+});
+
+const upload = multer({ storage });
 
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
         try {
-            // Destructure the necessary fields from the request body
+
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, profileImage, userName } = req.body;
 
             // Ensure all required fields are provided
-            if (!email) {
-                throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR);
-            }
-            if (!password) {
-                throw new BadRequestsException('Password is required.', ErrorCode.VALIDATION_ERROR);
-            }
-            if (!userName) {
-                throw new BadRequestsException('User name is required.', ErrorCode.VALIDATION_ERROR);
-            }
-            if (!name) {
-                throw new BadRequestsException('Name is required.', ErrorCode.VALIDATION_ERROR);
-            }
+            if (!email) throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR)
+            if (!password) throw new BadRequestsException('Password is required.', ErrorCode.VALIDATION_ERROR)
+            if (!userName) throw new BadRequestsException('User name is required.', ErrorCode.VALIDATION_ERROR)
+            if (!name) throw new BadRequestsException('Name is required.', ErrorCode.VALIDATION_ERROR)
 
             // Validate request body against the schema (optional but keeps your validation centralized)
             SignUpSchema.parse(req.body);
@@ -44,49 +48,12 @@ const authCtrl = {
             const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
             const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
 
-            if (userByEmail) {
-                throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
-            }
+            if (userByEmail) throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
+            if (userByUserName) throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS)
 
-            if (userByUserName) {
-                throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
-            }
-            // =========================================
-            // Parse user agent information
             const userAgentString = req.headers['user-agent'] || '';
-            const userAgentInfo: IResult = parser(userAgentString);
-
-            const deviceDetector = new DeviceDetector();
-            const userAgent = userAgentInfo.ua;
-            const deviceInfo = deviceDetector.parse(userAgent);
-
-            // Update userAgentInfo with device details
-            userAgentInfo.device = {
-                model: deviceInfo.device?.model || '',
-                type: deviceInfo.device?.type || '',
-                vendor: deviceInfo.device?.brand || '',
-            };
-
-            // Get the public IP address
-            let publicIp = '';
-            try {
-                publicIp = await getPublicIp();
-            } catch (err: any) {
-                console.error('Error fetching public IP:', err.message);
-            }
-
-            // Get additional location details based on IP address
-            let location = null;
-            if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
-                try {
-                    const response = await axios.get(`https://ipinfo.io/${publicIp}?token=${IPINFO_TOKEN}`);
-                    location = response.data;
-                } catch (err: any) {
-                    console.error('Error fetching location:', err.message);
-                }
-            }
-
-            // =========================================
+            const userAgentInfo = getUserAgentInfo(userAgentString);
+            const { publicIp, location } = await getPublicIpAndLocation();
 
 
             // Create a new user in the database
@@ -122,6 +89,8 @@ const authCtrl = {
 
             // Send welcome email (async)
             // await sendWelcomeEmail(email, name);
+            // Create user folder
+            createUserFolder(userName);
 
         } catch (error: any) {
             if (error instanceof ZodError) {
@@ -145,7 +114,6 @@ const authCtrl = {
             }
         }
     },
-
 
 
     login: async (req: Request, res: Response) => {
