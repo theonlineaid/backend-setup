@@ -5,12 +5,13 @@ export enum ErrorCode {
     INCORRECT_PASSWORD = 1003,         // Incorrect password
     ADDRESS_NOT_FOUND = 1004,          // Address not found
     ADDRESS_DOES_NOT_BELONG = 1005,    // Address does not belong
+    USERNAME_REQUIRED = 1006,          // User name is required
     UNPROCESSABLE_ENTITY = 2001,       // Unprocessable entity
     INTERNAL_EXCEPTION = 3001,         // Internal server exception
     UNAUTHORIZED = 4001,               // Unauthorized access
     PRODUCT_NOT_FOUND = 5001,          // Product not found
     ORDER_NOT_FOUND = 6001,            // Order not found
-    BAD_REQUEST = 5000,                //
+    BAD_REQUEST = 5000,                // Bad request
     CART_ITEM_NOT_FOUND = 7000,
     CART_NOT_FOUND = 7001,
     REVIEW_NOT_FOUND = 8000

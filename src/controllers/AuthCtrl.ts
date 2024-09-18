@@ -2,7 +2,7 @@ import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 import jwt from "jsonwebtoken";
-import { uuid } from 'uuidv4';
+import { v4 as uuid } from 'uuid';
 import { IPINFO_TOKEN, JWT_SECRET } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
@@ -24,16 +24,21 @@ const authCtrl = {
             // Destructure the necessary fields from the request body
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, profileImage, userName } = req.body;
     
+            // Ensure userName is provided
+            if (!userName) {
+                throw new BadRequestsException('User name is required.', ErrorCode.USERNAME_REQUIRED);
+            }
+    
             // Check if the user already exists by email and userName
             const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
-            // const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
+            const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
     
             if (userByEmail) {
                 throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
             }
-            // if (userByUserName) {
-            //     throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
-            // }
+            if (userByUserName) {
+                throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
+            }
     
             // Parse user agent information
             const userAgentString = req.headers['user-agent'] || '';
@@ -75,7 +80,6 @@ const authCtrl = {
                     email,
                     password: hashSync(password, 10),
                     name,
-                    userName, // Ensure userName is included
                     bio: bio || '', // Default to an empty string if bio is not provided
                     ssn,
                     phoneNumber,
@@ -85,7 +89,7 @@ const authCtrl = {
                     ipAddress: publicIp, // Store IP address
                     location,
                     profileImage,
-                    
+                    userName // Ensure userName is included
                 }
             });
     
@@ -113,6 +117,7 @@ const authCtrl = {
             }
         }
     },
+    
     
     
 
