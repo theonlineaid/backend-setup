@@ -12,6 +12,7 @@ import parser, { IResult } from 'ua-parser-js';
 import axios from 'axios';
 import { getPublicIp } from "../utils/getPublicIp";
 import DeviceDetector from "device-detector-js";
+import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
 
 const authCtrl = {
 
@@ -19,31 +20,36 @@ const authCtrl = {
         try {
             // Validate request body against the schema
             SignUpSchema.parse(req.body);
-
+    
             // Destructure the necessary fields from the request body
-            const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender } = req.body;
-
-            // Check if the user already exists
-            let user = await prismaClient.user.findFirst({ where: { email: email } });
-
-            if (user) throw new BadRequestsException('User already exists.', ErrorCode.USER_ALREADY_EXISTS);
-
-
+            const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, profileImage, userName } = req.body;
+    
+            // Check if the user already exists by email and userName
+            const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
+            // const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
+    
+            if (userByEmail) {
+                throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
+            }
+            // if (userByUserName) {
+            //     throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
+            // }
+    
             // Parse user agent information
             const userAgentString = req.headers['user-agent'] || '';
             const userAgentInfo: IResult = parser(userAgentString);
-
+    
             const deviceDetector = new DeviceDetector();
             const userAgent = userAgentInfo.ua;
             const deviceInfo = deviceDetector.parse(userAgent);
-
+    
             // Update userAgentInfo with device details
             userAgentInfo.device = {
                 model: deviceInfo.device?.model || '',
                 type: deviceInfo.device?.type || '',
                 vendor: deviceInfo.device?.brand || '',
             };
-
+    
             // Get the public IP address
             let publicIp = '';
             try {
@@ -51,7 +57,7 @@ const authCtrl = {
             } catch (err: any) {
                 console.error('Error fetching public IP:', err.message);
             }
-
+    
             // Get additional location details based on IP address
             let location = null;
             if (publicIp && publicIp !== '::1' && publicIp !== '127.0.0.1') {
@@ -62,13 +68,14 @@ const authCtrl = {
                     console.error('Error fetching location:', err.message);
                 }
             }
-
+    
             // Create a new user in the database
-            user = await prismaClient.user.create({
+            const user = await prismaClient.user.create({
                 data: {
                     email,
                     password: hashSync(password, 10),
                     name,
+                    userName, // Ensure userName is included
                     bio: bio || '', // Default to an empty string if bio is not provided
                     ssn,
                     phoneNumber,
@@ -76,13 +83,15 @@ const authCtrl = {
                     gender,
                     userAgentInfo,
                     ipAddress: publicIp, // Store IP address
-                    location
+                    location,
+                    profileImage,
+                    
                 }
             });
-
+    
             // Send success response
             res.status(201).json({
-                message: "Successfully create a user",
+                message: "Successfully created a user",
                 status: "Success",
                 user: user,
                 timestamp: new Date().toISOString(),
@@ -91,7 +100,10 @@ const authCtrl = {
                     serverTime: new Date().toISOString()
                 }
             });
-
+    
+            // Send welcome email (async)
+            await sendWelcomeEmail(email, name);
+    
         } catch (error: any) {
             // Send error response in JSON format
             if (error instanceof BadRequestsException) {
@@ -101,63 +113,90 @@ const authCtrl = {
             }
         }
     },
+    
+    
 
     login: async (req: Request, res: Response) => {
-       try {
-        const { email, password } = req.body;
+        try {
+            const { email, password } = req.body;
 
-        let user = await prismaClient.user.findFirst({ where: { email } })
-        if (!user) throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND)
+            let user = await prismaClient.user.findFirst({ where: { email } })
+            if (!user) throw new NotFoundException('User not found.', ErrorCode.USER_NOT_FOUND)
 
-        if (!compareSync(password, user.password)) {
-            res.json({ message: `Incorrect password ${ErrorCode.INCORRECT_PASSWORD}` });
-            throw new BadRequestsException('Incorrect password', ErrorCode.INCORRECT_PASSWORD)
-        }
+            if (!compareSync(password, user.password)) {
+                res.json({ message: `Incorrect password ${ErrorCode.INCORRECT_PASSWORD}` });
+                throw new BadRequestsException('Incorrect password', ErrorCode.INCORRECT_PASSWORD)
+            }
 
-        if (!email) throw new NotFoundException('Please give your email.', ErrorCode.USER_NOT_FOUND)
+            if (!email) throw new NotFoundException('Please give your email.', ErrorCode.USER_NOT_FOUND)
 
-        const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' });
-        const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    
-        // Set tokens in cookies
-        res.cookie('accessToken', accessToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-        });
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-        const token = {
-            accessToken,
-            refreshToken
-        }
+            const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' });
+            const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
 
-
-        // const access = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' })
-        // const refresh = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-
-        // const token = {
-        //     access,
-        //     refresh
-        // }
-        // res.json({ user, token })
-
-        res.json({ user, token })
+            // Set tokens in cookies
+            res.cookie('accessToken', accessToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+            });
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+            const token = {
+                accessToken,
+                refreshToken
+            }
 
 
-       } catch (error: any) {
+            // const access = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '3d' })
+            // const refresh = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
+
+            // const token = {
+            //     access,
+            //     refresh
+            // }
+            // res.json({ user, token })
+
+            res.json({ user, token })
+
+
+        } catch (error: any) {
             if (error instanceof NotFoundException || error instanceof BadRequestsException) {
                 // Handle known errors
                 res.status(400).json({ message: error.message });
             } else {
                 // Handle unexpected errors
-               res.status(500).json({ message: 'Internal server error' });
+                res.status(500).json({ message: 'Internal server error' });
             }
         }
     },
+
+    // refreshToken : async (req: Request, res: Response) => {
+    //     const { refreshToken } = req.cookies;
+
+    //     if (!refreshToken) {
+    //         return res.status(401).json({ message: 'Unauthorized' });
+    //     }
+
+    //     try {
+    //         const payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET) as any;
+    //         const newAccessToken = jwt.sign({ userId: payload.userId }, ACCESS_TOKEN_SECRET, { expiresIn: '3d' });
+
+    //         res.cookie('accessToken', newAccessToken, {
+    //             httpOnly: true,
+    //             secure: process.env.NODE_ENV === 'production',
+    //             maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    //             sameSite: 'Strict',
+    //         });
+
+    //         res.status(200).json({ message: 'Token refreshed' });
+    //     } catch (error) {
+    //         res.status(401).json({ message: 'Unauthorized' });
+    //     }
+    // },
+
 
     // logout: async (req: Request, res: Response) => {
     //     res.clearCookie('jwtToken');
@@ -165,7 +204,7 @@ const authCtrl = {
     //     res.json({ message: "Logout successful" });
     // },
 
-    logout:  async (req: Request, res: Response) => {
+    logout: async (req: Request, res: Response) => {
         res.clearCookie('accessToken');
         res.clearCookie('refreshToken');
         res.json({ message: 'Logout successful' });

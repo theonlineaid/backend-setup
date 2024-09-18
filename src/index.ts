@@ -33,7 +33,7 @@ export const prismaClient = new PrismaClient({
                     lineTwo: true,
                     city: true,
                     country: true,
-                    pincode: true
+                    pincode: true,
                 },
                 compute: (addr) => {
                     return `${addr.lineOne}, ${addr.lineTwo}, ${addr.city}, ${addr.country}-${addr.pincode}`

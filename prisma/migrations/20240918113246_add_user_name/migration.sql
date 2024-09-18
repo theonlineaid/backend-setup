@@ -3,6 +3,7 @@ CREATE TABLE `users` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
+    `userName` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `profileImage` VARCHAR(191) NULL,
     `coverImage` VARCHAR(191) NULL,
@@ -22,6 +23,7 @@ CREATE TABLE `users` (
     `location` JSON NULL,
 
     UNIQUE INDEX `users_email_key`(`email`),
+    UNIQUE INDEX `users_userName_key`(`userName`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -52,6 +54,7 @@ CREATE TABLE `products` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    FULLTEXT INDEX `products_name_description_tags_idx`(`name`, `description`, `tags`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
