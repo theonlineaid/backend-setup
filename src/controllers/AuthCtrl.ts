@@ -13,35 +13,44 @@ import axios from 'axios';
 import { getPublicIp } from "../utils/getPublicIp";
 import DeviceDetector from "device-detector-js";
 import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
+import { InternalException } from "../exceptions/internalException";
 
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
         try {
-            // Validate request body against the schema
-            SignUpSchema.parse(req.body);
-
             // Destructure the necessary fields from the request body
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, profileImage, userName } = req.body;
 
-            // Ensure userName is provided
+            // Ensure all required fields are provided
+            if (!email) {
+                throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR);
+            }
+            if (!password) {
+                throw new BadRequestsException('Password is required.', ErrorCode.VALIDATION_ERROR);
+            }
+            if (!userName) {
+                throw new BadRequestsException('User name is required.', ErrorCode.VALIDATION_ERROR);
+            }
+            if (!name) {
+                throw new BadRequestsException('Name is required.', ErrorCode.VALIDATION_ERROR);
+            }
 
+            // Validate request body against the schema (optional but keeps your validation centralized)
+            SignUpSchema.parse(req.body);
 
             // Check if the user already exists by email and userName
             const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
             const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
 
-            if (!userName) {
-                throw new BadRequestsException('User name is required.', ErrorCode.USERNAME_REQUIRED);
-            }
-
             if (userByEmail) {
                 throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
             }
+
             if (userByUserName) {
                 throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
             }
-
+            // =========================================
             // Parse user agent information
             const userAgentString = req.headers['user-agent'] || '';
             const userAgentInfo: IResult = parser(userAgentString);
@@ -76,6 +85,9 @@ const authCtrl = {
                 }
             }
 
+            // =========================================
+
+
             // Create a new user in the database
             const user = await prismaClient.user.create({
                 data: {
@@ -108,17 +120,19 @@ const authCtrl = {
             });
 
             // Send welcome email (async)
-            await sendWelcomeEmail(email, name);
+            // await sendWelcomeEmail(email, name);
 
         } catch (error: any) {
             // Send error response in JSON format
             if (error instanceof BadRequestsException) {
                 res.status(400).json({ message: error.message });
             } else {
+                console.error('Internal server error:', error);  // Log the full error for debugging
                 res.status(500).json({ message: 'Internal server error' });
             }
         }
     },
+
 
 
     login: async (req: Request, res: Response) => {

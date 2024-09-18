@@ -14,14 +14,15 @@ export enum ErrorCode {
     BAD_REQUEST = 5000,                // Bad request
     CART_ITEM_NOT_FOUND = 7000,
     CART_NOT_FOUND = 7001,
-    REVIEW_NOT_FOUND = 8000
+    REVIEW_NOT_FOUND = 8000,
+    VALIDATION_ERROR = 9000
 }
 
 // Custom HTTP Exception class representing errors in HTTP requests or responses
 export class HttpException extends Error {
     // Properties to store error details
     message: string;        // Error message
-    errorCode: any;         // Identifier representing the specific error code
+    errorCode?: any;         // Identifier representing the specific error code
     statusCode: number;     // HTTP status code
     errors: ErrorCode;      // Predefined error codes
 
