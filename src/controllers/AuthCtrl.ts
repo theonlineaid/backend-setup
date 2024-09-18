@@ -14,6 +14,7 @@ import { getPublicIp } from "../utils/getPublicIp";
 import DeviceDetector from "device-detector-js";
 import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
 import { InternalException } from "../exceptions/internalException";
+import { ZodError } from 'zod';
 
 const authCtrl = {
 
@@ -123,12 +124,24 @@ const authCtrl = {
             // await sendWelcomeEmail(email, name);
 
         } catch (error: any) {
-            // Send error response in JSON format
-            if (error instanceof BadRequestsException) {
-                res.status(400).json({ message: error.message });
+            if (error instanceof ZodError) {
+                // Handle Zod validation errors
+                const formattedErrors = error.errors.map((err: any) => ({
+                    path: err.path.join('.'),
+                    message: err.message,
+                }));
+
+                return res.status(400).json({
+                    message: "Validation error",
+                    errors: formattedErrors, // Provide the validation errors in the response
+                });
+            } else if (error instanceof BadRequestsException) {
+                // Handle custom application errors
+                return res.status(400).json({ message: error.message });
             } else {
-                console.error('Internal server error:', error);  // Log the full error for debugging
-                res.status(500).json({ message: 'Internal server error' });
+                // Handle internal server error
+                console.error('Internal server error:', error);  // Log the full error
+                return res.status(500).json({ message: 'Internal server error' });
             }
         }
     },
