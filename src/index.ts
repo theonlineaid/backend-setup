@@ -5,9 +5,11 @@ import { PrismaClient } from '@prisma/client';
 import { errorMiddleware } from './middlewares/error';
 import { PORT } from './utils/secret';
 import RootRouter from './routes';
-import cors from 'cors'
+import cors from 'cors';
+import morgan from 'morgan'
 
 const app: Express = express();
+app.use(morgan('tiny'));
 
 // Middleware 
 app.use(express.json());

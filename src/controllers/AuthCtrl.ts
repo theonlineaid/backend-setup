@@ -2,7 +2,7 @@ import { Response, Request } from "express";
 import { prismaClient } from "..";
 import { hashSync, compareSync } from "bcrypt";
 import { v4 as uuid } from 'uuid';
-import { JWT_SECRET } from "../utils/secret";
+import { JWT_SECRET, PORT } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { ErrorCode } from "../exceptions/root";
 import { BadRequestsException } from "../exceptions/exceptions";
@@ -10,30 +10,16 @@ import { SignUpSchema } from "../schemas/users";
 import { ZodError } from 'zod';
 import { getPublicIpAndLocation, getUserAgentInfo } from "../utils/userUtils";
 import jwt from "jsonwebtoken";
-import multer from 'multer';
-import path from 'path';
-import { createUserFolder } from "../utils/fileUtils";
 
 
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Destination folder logic can be defined here
-        cb(null, path.join(__dirname, '..', 'uploads')); // Root folder for uploads
-    },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
-    }
-});
-
-const upload = multer({ storage });
 
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
         try {
 
-            const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, profileImage, userName } = req.body;
+            const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, userName } = req.body;
+            const profileImage = req.file?.filename;
 
             // Ensure all required fields are provided
             if (!email) throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR)
@@ -55,6 +41,11 @@ const authCtrl = {
             const userAgentInfo = getUserAgentInfo(userAgentString);
             const { publicIp, location } = await getPublicIpAndLocation();
 
+            // Construct the full URL for the profile image
+            const hostname = req.hostname;
+            const imagePath = profileImage ? `http://${hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
+
+
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
@@ -71,7 +62,7 @@ const authCtrl = {
                     userAgentInfo,
                     ipAddress: publicIp, // Store IP address
                     location,
-                    profileImage
+                    profileImage: imagePath
                 }
             });
 
@@ -89,9 +80,6 @@ const authCtrl = {
 
             // Send welcome email (async)
             // await sendWelcomeEmail(email, name);
-            // Create user folder
-            createUserFolder(userName);
-
         } catch (error: any) {
             if (error instanceof ZodError) {
                 // Handle Zod validation errors
