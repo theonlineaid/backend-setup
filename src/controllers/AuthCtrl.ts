@@ -10,6 +10,7 @@ import { SignUpSchema } from "../schemas/users";
 import { ZodError } from 'zod';
 import { getPublicIpAndLocation, getUserAgentInfo } from "../utils/userUtils";
 import jwt from "jsonwebtoken";
+import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
 
 
 
@@ -19,6 +20,7 @@ const authCtrl = {
         try {
 
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, userName } = req.body;
+            // const files = req.files as Express.Multer.File[];
             const profileImage = req.file?.filename;
 
             // Ensure all required fields are provided
@@ -42,10 +44,7 @@ const authCtrl = {
             const { publicIp, location } = await getPublicIpAndLocation();
 
             // Construct the full URL for the profile image
-            const hostname = req.hostname;
-            const imagePath = profileImage ? `http://${hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
-
-
+            const imagePath = profileImage ? `http://${req.hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
@@ -79,7 +78,7 @@ const authCtrl = {
             });
 
             // Send welcome email (async)
-            // await sendWelcomeEmail(email, name);
+            await sendWelcomeEmail(email, name);
         } catch (error: any) {
             if (error instanceof ZodError) {
                 // Handle Zod validation errors
