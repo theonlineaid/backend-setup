@@ -40,7 +40,6 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
                 <p style="font-size: 16px; color: #555;">Thank you for joining us!</p>
                 <p style="font-size: 16px; color: #555;">Best regards,</p>
                 <br />
-                <br />
                 <p style="font-size: 16px; color: #333;"><strong>Online Aid Team</strong></p>
             </div>
             <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px;">
