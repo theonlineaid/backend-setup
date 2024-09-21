@@ -19,59 +19,38 @@ import path from 'path';
 const authCtrl = {
 
     register: async (req: Request, res: Response) => {
-
-        // let profileImage = '';
+        let profileImage : string | undefined =  ''; // Get the uploaded file's name
 
         try {
-
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, userName } = req.body;
-            // const files = req.files as Express.Multer.File[];
-            const profileImage = req.file?.filename;
+            profileImage = req.file?.filename; // Get the uploaded file's name
 
             // Ensure all required fields are provided
-            if (!email) throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR)
-            if (!password) throw new BadRequestsException('Password is required.', ErrorCode.VALIDATION_ERROR)
-            if (!userName) throw new BadRequestsException('User name is required.', ErrorCode.VALIDATION_ERROR)
-            if (!name) throw new BadRequestsException('Name is required.', ErrorCode.VALIDATION_ERROR)
+            if (!email) throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR);
+            if (!password) throw new BadRequestsException('Password is required.', ErrorCode.VALIDATION_ERROR);
+            if (!userName) throw new BadRequestsException('User name is required.', ErrorCode.VALIDATION_ERROR);
+            if (!name) throw new BadRequestsException('Name is required.', ErrorCode.VALIDATION_ERROR);
 
-            // Validate request body against the schema (optional but keeps your validation centralized)
+            // Validate request body against the schema
             SignUpSchema.parse(req.body);
 
-
-            // All validations passed, now process the image if uploaded
-            // if (req.file) {
-            //     const userFolderPath = path.join('uploads', userName);
-            //     const imageFullPath = path.join(userFolderPath, req.file.filename);
-            //     profileImage = `http://${req.hostname}:${PORT}/${imageFullPath}`;
-
-            //     // Optionally create a folder if it doesn't exist
-            //     if (!fs.existsSync(userFolderPath)) {
-            //         fs.mkdirSync(userFolderPath, { recursive: true });
-            //     }
-
-            //     // Move the image to the correct folder
-            //     fs.renameSync(req.file.path, imageFullPath); // Moves the file
-            // }
-
             // Check if the user already exists by email and userName
-            const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
-            const userByUserName = await prismaClient.user.findFirst({ where: { userName: userName } });
+            const userByEmail = await prismaClient.user.findFirst({ where: { email } });
+            const userByUserName = await prismaClient.user.findFirst({ where: { userName } });
 
             if (userByEmail) throw new BadRequestsException('User with this email already exists.', ErrorCode.USER_ALREADY_EXISTS);
-            if (userByUserName) throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS)
+            if (userByUserName) throw new BadRequestsException('User with this username already exists.', ErrorCode.USER_ALREADY_EXISTS);
 
+            // Retrieve user agent info and public IP
             const userAgentString = req.headers['user-agent'] || '';
             const userAgentInfo = getUserAgentInfo(userAgentString);
             const { publicIp, location } = await getPublicIpAndLocation();
-
-            // Construct the full URL for the profile image
-            const imagePath = profileImage ? `http://${req.hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
                 data: {
                     email,
-                    password: hashSync(password, 10),
+                    password: hashSync(password, 10), // Hash the password
                     name,
                     userName,
                     bio: bio || '', // Default to an empty string if bio is not provided
@@ -82,7 +61,7 @@ const authCtrl = {
                     userAgentInfo,
                     ipAddress: publicIp, // Store IP address
                     location,
-                    profileImage: imagePath
+                    profileImage: profileImage || '' // Store the uploaded image file name, if exists
                 }
             });
 
@@ -92,20 +71,18 @@ const authCtrl = {
                 status: "Success",
                 user: user,
                 timestamp: new Date().toISOString(),
-                requestId: uuid(),  // Include a unique request ID if needed
+                requestId: uuid(),
                 metadata: {
                     serverTime: new Date().toISOString()
                 }
             });
 
-            // Send welcome email (async)
-            await sendWelcomeEmail(email, name);
-
         } catch (error: any) {
-            // If there's an error and the profileImage is uploaded, delete it
-            // if (req.file && profileImage) {
-            //     fs.unlinkSync(req.file.path); // Deletes the uploaded file
-            // }
+
+            if (req.file && profileImage) {
+                fs.unlinkSync(req.file.path); // Deletes the uploaded file
+            }
+    
             if (error instanceof ZodError) {
                 // Handle Zod validation errors
                 const formattedErrors = error.errors.map((err: any) => ({
@@ -115,19 +92,18 @@ const authCtrl = {
 
                 return res.status(400).json({
                     message: "Validation error",
-                    errors: formattedErrors, // Provide the validation errors in the response
+                    errors: formattedErrors,
                 });
             } else if (error instanceof BadRequestsException) {
                 // Handle custom application errors
                 return res.status(400).json({ message: error.message });
             } else {
                 // Handle internal server error
-                console.error('Internal server error:', error);  // Log the full error
+                console.error('Internal server error:', error);
                 return res.status(500).json({ message: 'Internal server error' });
             }
         }
     },
-
 
 
     login: async (req: Request, res: Response) => {
@@ -268,75 +244,75 @@ const authCtrl = {
         }
     },
 
-    deleteMyAccount: async (req: Request, res: Response) => {
-
-        try {
-            await prismaClient.user.delete({
-                where: {
-                    id: +req.params.id
-                }
-            })
-            res.json({ success: true })
-
-
-
-        } catch (err) {
-            throw new NotFoundException('User not found.', ErrorCode.ADDRESS_NOT_FOUND)
-        }
-
-    },
-
-
     // deleteMyAccount: async (req: Request, res: Response) => {
+
     //     try {
-    //         // Fetch the user from the database to retrieve their profile image and folder path
-    //         const user: any = await prismaClient.user.findUnique({
-    //             where: {
-    //                 id: +req.params.id
-    //             },
-    //         });
-
-    //         if (!user) {
-    //             throw new NotFoundException('User not found.', ErrorCode.ADDRESS_NOT_FOUND);
-    //         }
-
-    //         // If the user has a profile image, attempt to delete it
-    //         if (user?.profileImage) {
-    //             const userFolderPath = path.join('uploads', user.userName); // Assuming you store images in a folder named after the username
-
-    //             // Delete the profile image file if it exists
-    //             const imageFileName : any = user.profileImage.split('/').pop(); // Extract file name from profileImage URL
-    //             const imageFullPath = path.join(userFolderPath, imageFileName);
-
-    //             if (fs.existsSync(imageFullPath)) {
-    //                 fs.unlinkSync(imageFullPath); // Deletes the image file
-    //             }
-
-    //             // Delete the user folder if it exists and is empty
-    //             if (fs.existsSync(userFolderPath)) {
-    //                 fs.rmdirSync(userFolderPath, { recursive: true }); // Deletes the folder and any remaining content
-    //             }
-    //         }
-
-    //         // Delete the user from the database
     //         await prismaClient.user.delete({
     //             where: {
     //                 id: +req.params.id
     //             }
-    //         });
+    //         })
+    //         res.json({ success: true })
 
-    //         // Respond with success
-    //         res.json({ success: true });
+
+
     //     } catch (err) {
-    //         // Handle user not found error or other exceptions
-    //         if (err instanceof NotFoundException) {
-    //             return res.status(404).json({ message: err.message });
-    //         }
-
-    //         console.error('Error deleting account:', err);
-    //         return res.status(500).json({ message: 'Internal server error' });
+    //         throw new NotFoundException('User not found.', ErrorCode.ADDRESS_NOT_FOUND)
     //     }
+
     // },
+
+
+    deleteMyAccount: async (req: Request, res: Response) => {
+        try {
+            // Fetch the user from the database to retrieve their profile image and folder path
+            const user: any = await prismaClient.user.findUnique({
+                where: {
+                    id: +req.params.id
+                },
+            });
+
+            if (!user) {
+                throw new NotFoundException('User not found.', ErrorCode.ADDRESS_NOT_FOUND);
+            }
+
+            // If the user has a profile image, attempt to delete it
+            if (user?.profileImage) {
+                const userFolderPath = path.join('uploads', user.userName); // Assuming you store images in a folder named after the username
+
+                // Delete the profile image file if it exists
+                const imageFileName : any = user.profileImage.split('/').pop(); // Extract file name from profileImage URL
+                const imageFullPath = path.join(userFolderPath, imageFileName);
+
+                if (fs.existsSync(imageFullPath)) {
+                    fs.unlinkSync(imageFullPath); // Deletes the image file
+                }
+
+                // Delete the user folder if it exists and is empty
+                if (fs.existsSync(userFolderPath)) {
+                    fs.rmdirSync(userFolderPath, { recursive: true }); // Deletes the folder and any remaining content
+                }
+            }
+
+            // Delete the user from the database
+            await prismaClient.user.delete({
+                where: {
+                    id: +req.params.id
+                }
+            });
+
+            // Respond with success
+            res.json({ success: true });
+        } catch (err) {
+            // Handle user not found error or other exceptions
+            if (err instanceof NotFoundException) {
+                return res.status(404).json({ message: err.message });
+            }
+
+            console.error('Error deleting account:', err);
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
 
 
 };
