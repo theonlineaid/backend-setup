@@ -43,7 +43,7 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
                 <p style="font-size: 16px; color: #333;"><strong>Online Aid Team</strong></p>
             </div>
             <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: 20px;">
-                <p>© 2024 Online Aid. All rights reserved.</p>
+                <p>&copy; ${new Date().getFullYear()} Online Aid. All rights reserved.</p>
                 <p>
                     <a href="https://onlineaid.vercel.app/privacy" style="color: #4CAF50; text-decoration: none;">Privacy Policy</a> | 
                     <a href="https://onlineaid.vercel.app/terms" style="color: #4CAF50; text-decoration: none;">Terms of Service</a>

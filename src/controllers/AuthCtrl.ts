@@ -11,17 +11,23 @@ import { ZodError } from 'zod';
 import { getPublicIpAndLocation, getUserAgentInfo } from "../utils/userUtils";
 import jwt from "jsonwebtoken";
 import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
+import fs from 'fs';
+import path from 'path';
 
 
 
 const authCtrl = {
 
+
+
     register: async (req: Request, res: Response) => {
+
+        let profileImage = '';
         try {
 
             const { email, password, name, bio, ssn, phoneNumber, dateOfBirth, gender, userName } = req.body;
             // const files = req.files as Express.Multer.File[];
-            const profileImage = req.file?.filename;
+            // const profileImage = req.file?.filename;
 
             // Ensure all required fields are provided
             if (!email) throw new BadRequestsException('Email is required.', ErrorCode.VALIDATION_ERROR)
@@ -31,6 +37,22 @@ const authCtrl = {
 
             // Validate request body against the schema (optional but keeps your validation centralized)
             SignUpSchema.parse(req.body);
+
+
+            // All validations passed, now process the image if uploaded
+            if (req.file) {
+                const userFolderPath = path.join('uploads', userName);
+                const imageFullPath = path.join(userFolderPath, req.file.filename);
+                profileImage = `http://${req.hostname}:${PORT}/${imageFullPath}`;
+
+                // Optionally create a folder if it doesn't exist
+                if (!fs.existsSync(userFolderPath)) {
+                    fs.mkdirSync(userFolderPath, { recursive: true });
+                }
+
+                // Move the image to the correct folder
+                fs.renameSync(req.file.path, imageFullPath); // Moves the file
+            }
 
             // Check if the user already exists by email and userName
             const userByEmail = await prismaClient.user.findFirst({ where: { email: email } });
@@ -44,7 +66,7 @@ const authCtrl = {
             const { publicIp, location } = await getPublicIpAndLocation();
 
             // Construct the full URL for the profile image
-            const imagePath = profileImage ? `http://${req.hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
+            // const imagePath = profileImage ? `http://${req.hostname}:${PORT}/uploads/${userName}/${profileImage}` : '';
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
@@ -61,7 +83,7 @@ const authCtrl = {
                     userAgentInfo,
                     ipAddress: publicIp, // Store IP address
                     location,
-                    profileImage: imagePath
+                    profileImage: profileImage
                 }
             });
 
@@ -79,7 +101,12 @@ const authCtrl = {
 
             // Send welcome email (async)
             await sendWelcomeEmail(email, name);
+
         } catch (error: any) {
+            // If there's an error and the profileImage is uploaded, delete it
+            if (req.file && profileImage) {
+                fs.unlinkSync(req.file.path); // Deletes the uploaded file
+            }
             if (error instanceof ZodError) {
                 // Handle Zod validation errors
                 const formattedErrors = error.errors.map((err: any) => ({
