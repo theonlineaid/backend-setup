@@ -7,6 +7,7 @@ import { PORT } from './utils/secret';
 import RootRouter from './routes';
 import cors from 'cors';
 import morgan from 'morgan'
+import path from 'path';
 
 const app: Express = express();
 app.use(morgan('tiny'));
@@ -19,6 +20,10 @@ app.use(cors({
     methods: 'GET,POST,PUT,PATCH,DELETE',
     credentials: true, // Enable cookies and credentials
 }));
+
+// Static folder to serve uploaded images
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
 app.use(cookieParser());
 app.use(errorMiddleware);
 app.use('/api', RootRouter)
