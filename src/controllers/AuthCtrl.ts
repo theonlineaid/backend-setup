@@ -44,7 +44,7 @@ const authCtrl = {
             // Retrieve user agent info and public IP
             const userAgentString = req.headers['user-agent'] || '';
             const userAgentInfo = getUserAgentInfo(userAgentString);
-            const { publicIp, location:any } = await getPublicIpAndLocation();
+            const { publicIp, location } = await getPublicIpAndLocation();
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
