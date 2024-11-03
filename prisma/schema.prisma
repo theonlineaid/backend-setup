@@ -1,0 +1,164 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     Int        @id @default(autoincrement())
+  name                   String
+  email                  String     @unique
+  userName               String?    @unique
+  password               String
+  profileImage           String?
+  coverImage             String?
+  bio                    String?
+  ssn                    String?
+  phoneNumber            String?
+  dateOfBirth            DateTime?
+  gender                 String?
+  address                String?
+  defaultBillingAddress  Int?
+  defaultShippingAddress Int?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  role                   Role       @default(USER)
+  userAgentInfo          Json?
+  ipAddress              String?
+  location               Json?
+  Address                Address[]
+  cartItems              CartItem[]
+  orders                 Order[]
+  reviews                Review[]
+
+  @@map("users")
+}
+
+model Address {
+  id        Int      @id @default(autoincrement())
+  lineOne   String
+  lineTwo   String?
+  city      String
+  country   String
+  pincode   String
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  type      String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "addresses_userId_fkey")
+  @@map("addresses")
+}
+
+model Product {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String         @db.Text
+  price       Decimal
+  tags        String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  cartItems   CartItem[]
+  orders      OrderProduct[]
+  reviews     Review[]
+
+  @@fulltext([name, description, tags])
+  @@map("products")
+}
+
+model CartItem {
+  id        Int          @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  product   Product      @relation(fields: [productId], references: [id])
+  user      User         @relation(fields: [userId], references: [id])
+  events    OrderEvent[]
+
+  @@index([productId], map: "cart_items_productId_fkey")
+  @@index([userId], map: "cart_items_userId_fkey")
+  @@map("cart_items")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    String
+  comment   String
+  productId Int
+  userId    Int
+  imagePath String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([productId], map: "reviews_productId_fkey")
+  @@index([userId], map: "reviews_userId_fkey")
+  @@map("reviews")
+}
+
+model Order {
+  id        Int              @id @default(autoincrement())
+  userId    Int
+  netAmount Decimal
+  address   String
+  status    OrderEventStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  events    OrderEvent[]
+  products  OrderProduct[]
+  user      User             @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "orders_userId_fkey")
+  @@map("orders")
+}
+
+model OrderProduct {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  productId Int
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+
+  @@index([orderId], map: "order_products_orderId_fkey")
+  @@index([productId], map: "order_products_productId_fkey")
+  @@map("order_products")
+}
+
+model OrderEvent {
+  id         Int              @id @default(autoincrement())
+  orderId    Int
+  status     OrderEventStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  cartItemId Int?
+  CartItem   CartItem?        @relation(fields: [cartItemId], references: [id])
+  order      Order            @relation(fields: [orderId], references: [id])
+
+  @@index([cartItemId], map: "order_events_cartItemId_fkey")
+  @@index([orderId], map: "order_events_orderId_fkey")
+  @@map("order_events")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderEventStatus {
+  PENDING
+  ACCEPTED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
