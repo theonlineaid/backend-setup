@@ -1,10 +1,6 @@
 import { Request, Response } from 'express';
 import { ErrorCode } from '../exceptions/root';
-<<<<<<< HEAD
-import { Product } from '@prisma/client';
-=======
 // import { Product } from '@prisma/client';
->>>>>>> docker-setup
 import { ChangeQuantitySchema, CreateCartSchema } from '../schemas/cart';
 import { prismaClient } from '..';
 import { NotFoundException } from '../exceptions/notFound';

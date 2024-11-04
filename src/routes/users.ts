@@ -14,11 +14,7 @@ UserRouter.get('/address', [authMiddleware], errorHandler(userCtrl.getAllAddress
 UserRouter.patch('/', [authMiddleware], errorHandler(userCtrl.updateDefaultUserAddress))
 
 
-<<<<<<< HEAD
-UserRouter.get('/', [authMiddleware, adminMiddleware], errorHandler(userCtrl.getAllUsersByAdmin))
-=======
 UserRouter.get('/', [authMiddleware], errorHandler(userCtrl.getAllUsersByAdmin))
->>>>>>> docker-setup
 UserRouter.get('/:id', [authMiddleware, adminMiddleware], errorHandler(userCtrl.getSingleUserByAdmin))
 UserRouter.post('/', [authMiddleware, adminMiddleware], errorHandler(userCtrl.addUserByAdmin))
 UserRouter.delete('/:id', [authMiddleware, adminMiddleware], errorHandler(userCtrl.deleteUserByAdmin))
