@@ -1,6 +1,7 @@
 // Enum defining predefined error codes for HttpException
 export enum ErrorCode {
     USER_NOT_FOUND = 1001,             // User not found
+    EMAIL_NOT_FOUND = 1007,             // User not found
     USER_ALREADY_EXISTS = 1002,        // User already exists
     INCORRECT_PASSWORD = 1003,         // Incorrect password
     ADDRESS_NOT_FOUND = 1004,          // Address not found

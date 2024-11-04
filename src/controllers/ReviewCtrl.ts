@@ -22,11 +22,19 @@ const reviewCtrl = {
                 throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
             }
 
+<<<<<<< HEAD
             if (!req.file) {
                 return res.status(400).json({ error: 'No file uploaded' });
             }
 
             const imagePath = req.file.path.replace(/\\/g, '/');
+=======
+            // if (!req.file) {
+            //     return res.status(400).json({ error: 'No file uploaded' });
+            // }
+
+            // const imagePath = req.file.path.replace(/\\/g, '/');
+>>>>>>> docker-setup
 
             const review = await prismaClient.review.create({
                 data: {
@@ -34,7 +42,11 @@ const reviewCtrl = {
                     comment,
                     productId,
                     userId,
+<<<<<<< HEAD
                     imagePath,
+=======
+                    // imagePath,
+>>>>>>> docker-setup
                 },
             });
 
@@ -62,9 +74,15 @@ const reviewCtrl = {
                 throw new NotFoundException('You are not authorized to delete this review.', ErrorCode.UNAUTHORIZED);
             }
 
+<<<<<<< HEAD
             if (review.imagePath) {
                 fs.unlinkSync(path.resolve(review.imagePath));
             }
+=======
+            // if (review.imagePath) {
+            //     fs.unlinkSync(path.resolve(review.imagePath));
+            // }
+>>>>>>> docker-setup
 
             await prismaClient.review.delete({
                 where: { id: reviewId },
@@ -95,6 +113,7 @@ const reviewCtrl = {
                 throw new NotFoundException('You are not authorized to edit this review.', ErrorCode.UNAUTHORIZED);
             }
 
+<<<<<<< HEAD
             if (req.file) {
                 if (review.imagePath) {
                     fs.unlinkSync(path.resolve(review.imagePath));
@@ -102,6 +121,15 @@ const reviewCtrl = {
 
                 validatedData.imagePath = req.file.path.replace(/\\/g, '/');
             }
+=======
+            // if (req.file) {
+            //     if (review.imagePath) {
+            //         fs.unlinkSync(path.resolve(review.imagePath));
+            //     }
+
+            //     validatedData.imagePath = req.file.path.replace(/\\/g, '/');
+            // }
+>>>>>>> docker-setup
 
             const updatedReview = await prismaClient.review.update({
                 where: { id: reviewId },

@@ -7,6 +7,10 @@ import { errorHandler } from '../utils/errorHandler';
 const AuthRouter: Router = Router();
 
 AuthRouter.post('/register', upload.single('profileImage'), errorHandler(authCtrl.register));
+<<<<<<< HEAD
+=======
+AuthRouter.put('/:id', upload.single('profileImage'), [authMiddleware], errorHandler(authCtrl.updateUser));
+>>>>>>> docker-setup
 AuthRouter.post('/login', errorHandler(authCtrl.login));
 AuthRouter.post('/logout', authCtrl.logout);
 AuthRouter.get('/me', [authMiddleware], errorHandler(authCtrl.me));

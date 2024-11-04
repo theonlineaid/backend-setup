@@ -4,7 +4,11 @@ import { UnauthorizedException } from "../exceptions/unauthorized";
 import { ErrorCode } from "../exceptions/root";
 import { JWT_SECRET } from "../utils/secret";
 import { prismaClient } from "..";
+<<<<<<< HEAD
 import { User } from "@prisma/client";
+=======
+// import { User } from "@prisma/client";
+>>>>>>> docker-setup
 
 declare global {
     namespace Express {

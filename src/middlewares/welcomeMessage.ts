@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import { APP_PASS, EMAIL_USER } from '../utils/secret';
 dotenv.config({ path: '.env' });
 
-export const sendWelcomeEmail = async (email: string, name: string) => {
+export const sendWelcomeEmail = async (email: string, name: any) => {
     const transporter = nodemailer.createTransport({
         service: 'Gmail',
         auth: {
@@ -53,5 +53,14 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
         `,  // HTML body with inline styles for a better look
     };
 
-    await transporter.sendMail(mailOptions);
+    // Log the mail options
+    // console.log('Mail Options:', mailOptions);
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully!');
+    } catch (error) {
+        console.error('Error sending email:', error);
+        throw new Error('Failed to send email.'); // Handle the error as needed
+    }
 };

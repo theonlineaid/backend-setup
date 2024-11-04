@@ -8,6 +8,7 @@ const allowedFileTypes = /jpeg|jpg|png/;
 
 // Storage configuration for Multer
 const storage: StorageEngine = multer.diskStorage({
+<<<<<<< HEAD
     destination: (req: Request, file, cb) => {
         const userFolder = path.join(__dirname, '../..', 'uploads', req.body.userName);
 
@@ -17,6 +18,25 @@ const storage: StorageEngine = multer.diskStorage({
         }
 
         cb(null, userFolder); // Set folder as the destination for the uploaded files
+=======
+    destination: async (req: Request, file, cb) => {
+        const userName: string = req.body.userName;
+
+        // Validate userName
+        // if (!userName) {
+        //     return cb(new Error('userName is required in the request body.'), '');
+        // }
+
+        const userFolder: any = path.join(__dirname, '../..', 'uploads', userName);
+
+        // Create folder if it doesn't exist
+        try {
+            await fs.promises.mkdir(userFolder, { recursive: true });
+            cb(null, userFolder); // Set folder as the destination for the uploaded files
+        } catch (error) {
+            cb(new Error('Could not create upload folder.'), '');
+        }
+>>>>>>> docker-setup
     },
     filename: (req: Request, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -44,4 +64,8 @@ const upload: Multer = multer({
     fileFilter
 });
 
+<<<<<<< HEAD
 export default upload;
+=======
+export default upload;
+>>>>>>> docker-setup
