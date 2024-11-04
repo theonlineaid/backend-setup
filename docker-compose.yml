@@ -1,13 +1,40 @@
 
+
 services:
-  node-app:
+  app:
     build:
       context: .
-      args:
-        NODE_ENV: development
-    volumes:
-      - .:/app
-      - /app/node_modules
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
     environment:
-      NODE_ENV: development
-    command: ["npm", "run", "dev"]
+      - DATABASE_URL=mysql://root:12345678@db:3306/ecommerce?schema=public
+    depends_on:
+      - db
+    volumes:
+      - .:/usr/src/app
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: ecommerce
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: 12345678
+    depends_on:
+      - db
+
+volumes:
+  db_data:

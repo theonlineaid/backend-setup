@@ -213,7 +213,6 @@ const authCtrl = {
         }
     },
 
-
     deleteMyAccount: async (req: Request, res: Response) => {
         try {
             // Fetch the user from the database to retrieve their profile image and folder path
@@ -330,8 +329,6 @@ const authCtrl = {
             }
         }
     }
-    
-
 }
 
 export default authCtrl;

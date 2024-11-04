@@ -55,7 +55,7 @@ export const sendWelcomeEmail = async (email: string, name: any) => {
     };
 
     // Log the mail options
-    console.log('Mail Options:', mailOptions);
+    // console.log('Mail Options:', mailOptions);
 
     try {
         await transporter.sendMail(mailOptions);
