@@ -71,6 +71,39 @@ model Product {
   @@map("products")
 }
 
+// model Product {
+//   id             Int            @id @default(autoincrement())
+//   name           String
+//   sku            String         @unique
+//   description    String         @db.Text
+//   category       String
+//   subcategory    String?
+//   price          Decimal
+//   tags           String
+//   originalPrice  Decimal?
+//   discountPercentage Float?     @default(0.0)
+//   stock          Int            @default(0)
+//   images         String[]       @db.Json
+//   youtubeUrl     String?        // Optional field for a YouTube video URL
+//   brand          String?
+//   specifications Json
+//   variants       Json
+//   slug           String         @unique
+//   metaTitle      String?
+//   metaDescription String?
+//   isFeatured     Boolean        @default(false)
+//   isActive       Boolean        @default(true)
+//   createdAt      DateTime       @default(now())
+//   updatedAt      DateTime       @updatedAt
+//   cartItems      CartItem[]
+//   orders         OrderProduct[]
+//   reviews        Review[]
+
+//   @@fulltext([name, description, tags])
+//   @@map("products")
+// }
+
+
 model CartItem {
   id        Int          @id @default(autoincrement())
   userId    Int
