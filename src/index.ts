@@ -14,9 +14,9 @@ app.use(morgan('tiny'));
 app.use(express.json());
 // app.use(cors())
 app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
+    origin: 'http://localhost:5173', // Replace with your frontend URL you can use Array over here 
     methods: 'GET,POST,PUT,PATCH,DELETE',
-    credentials: true, // Enable cookies and credentials
+    credentials: true, 
 }));
 
 app.use(cookieParser());
