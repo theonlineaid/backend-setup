@@ -81,47 +81,85 @@ const productCtrl = {
         }
 
     },
-
     searchProducts: async (req: Request, res: Response) => {
         try {
             // Get the search query from the request parameters
             const searchQuery = req.query.q?.toString();
-
+    
+            if (!searchQuery) {
+                return res.status(400).json({ error: 'Search query is required.' });
+            }
+    
             // Get pagination options from query parameters or use defaults
             const skip = req.query?.skip ? +req.query?.skip : 0;
             const take = req.query.take ? +req.query.take : 5;
-
+    
             // Find products that match the search query
             const products = await prismaClient.product.findMany({
                 where: {
-                    name: {
-                        search: searchQuery
-                    },
-                    description: {
-                        search: searchQuery,
-                    },
-                    tags: {
-                        search: searchQuery,
-                    }
+                    OR: [
+                        { name: { contains: searchQuery} },
+                        { description: { contains: searchQuery } },
+                        { tags: { contains: searchQuery } },
+                    ]
                 },
-
                 skip: skip,
                 take: take,
             });
-
+    
             if (!products || products.length === 0) {
-                throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+                return res.status(404).json({ error: 'Product not found.' });
             }
+    
             // Send the response with the search results
             res.json({ products });
-
+            console.log("Search Query:", searchQuery);
         } catch (error) {
-            res.status(500).json({ error: 'Internal Server Error to try search' });
-            console.error(error)
-            throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error. Please try again later.' });
         }
-        console.log("search product ======================")
     },
+
+    // searchProducts: async (req: Request, res: Response) => {
+    //     try {
+    //         // Get the search query from the request parameters
+    //         const searchQuery = req.query.q?.toString();
+
+    //         // Get pagination options from query parameters or use defaults
+    //         const skip = req.query?.skip ? +req.query?.skip : 0;
+    //         const take = req.query.take ? +req.query.take : 5;
+
+    //         // Find products that match the search query
+    //         const products = await prismaClient.product.findMany({
+    //             where: {
+    //                 name: {
+    //                     search: searchQuery
+    //                 },
+    //                 description: {
+    //                     search: searchQuery,
+    //                 },
+    //                 tags: {
+    //                     search: searchQuery,
+    //                 }
+    //             },
+
+    //             skip: skip,
+    //             take: take,
+    //         });
+
+    //         if (!products || products.length === 0) {
+    //             throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+    //         }
+    //         // Send the response with the search results
+    //         res.json({ products });
+
+    //     } catch (error) {
+    //         res.status(500).json({ error: 'Internal Server Error to try search' });
+    //         console.error(error)
+    //         throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
+    //     }
+    //     console.log("search product ======================")
+    // },
 
     getSingleProduct: async (req: Request, res: Response) => {
         try {

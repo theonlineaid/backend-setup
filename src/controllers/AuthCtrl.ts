@@ -11,7 +11,7 @@ import { SignUpSchema } from "../schemas/users";
 import { JWT_SECRET, PORT } from "../utils/secret";
 import { NotFoundException } from "../exceptions/notFound";
 import { BadRequestsException } from "../exceptions/exceptions";
-import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
+// import { sendWelcomeEmail } from "../middlewares/welcomeMessage";
 import { getPublicIpAndLocation, getUserAgentInfo } from "../utils/userUtils";
 
 
@@ -67,7 +67,7 @@ const authCtrl = {
                 }
             });
 
-            sendWelcomeEmail(email, name);
+            // sendWelcomeEmail(email, name);
 
             // Send success response
             res.status(201).json({
@@ -105,7 +105,7 @@ const authCtrl = {
             } else {
                 // Handle internal server error
                 console.error('Internal server error:', error);
-                return res.status(500).json({ message: 'Internal server error' });
+                return res.status(500).json({ message: 'Internal server error on sign up' });
             }
         }
     },
