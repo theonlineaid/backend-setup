@@ -48,13 +48,40 @@ CREATE TABLE `addresses` (
 CREATE TABLE `products` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(191) NOT NULL,
+    `sku` VARCHAR(191) NOT NULL,
     `description` TEXT NOT NULL,
+    `category` VARCHAR(191) NOT NULL,
+    `subcategory` VARCHAR(191) NULL,
     `price` DECIMAL(65, 30) NOT NULL,
     `tags` VARCHAR(191) NOT NULL,
+    `originalPrice` DECIMAL(65, 30) NULL,
+    `discountPercentage` DOUBLE NULL DEFAULT 0.0,
+    `stock` INTEGER NOT NULL DEFAULT 0,
+    `youtubeUrl` VARCHAR(191) NULL,
+    `brand` VARCHAR(191) NULL,
+    `specifications` JSON NOT NULL,
+    `variants` JSON NOT NULL,
+    `slug` VARCHAR(191) NOT NULL,
+    `metaTitle` VARCHAR(191) NULL,
+    `metaDescription` VARCHAR(191) NULL,
+    `isFeatured` BOOLEAN NOT NULL DEFAULT false,
+    `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `isTrash` BOOLEAN NOT NULL DEFAULT false,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX `products_sku_key`(`sku`),
+    UNIQUE INDEX `products_slug_key`(`slug`),
     FULLTEXT INDEX `products_name_description_tags_idx`(`name`, `description`, `tags`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `product_images` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `url` VARCHAR(191) NOT NULL,
+    `productId` INTEGER NOT NULL,
+
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -132,6 +159,9 @@ CREATE TABLE `order_events` (
 
 -- AddForeignKey
 ALTER TABLE `addresses` ADD CONSTRAINT `addresses_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `product_images` ADD CONSTRAINT `product_images_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `cart_items` ADD CONSTRAINT `cart_items_productId_fkey` FOREIGN KEY (`productId`) REFERENCES `products`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

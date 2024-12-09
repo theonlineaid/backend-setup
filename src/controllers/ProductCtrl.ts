@@ -11,10 +11,34 @@ const productCtrl = {
 
         const product = await prismaClient.product.create({
             data: {
-                ...req.body,
-                tags: req.body.tags.join(',')
-            }
-        })
+                name: req.body.name,
+                sku: req.body.sku,
+                description: req.body.description,
+                category: req.body.category,
+                subcategory: req.body.subcategory,
+                price: req.body.price,
+                tags: req.body.tags.join(','), // Convert array to a comma-separated string
+                originalPrice: req.body.originalPrice,
+                discountPercentage: req.body.discountPercentage,
+                stock: req.body.stock,
+                youtubeUrl: req.body.youtubeUrl,
+                brand: req.body.brand,
+                specifications: req.body.specifications,
+                variants: req.body.variants,
+                slug: req.body.slug,
+                metaTitle: req.body.metaTitle,
+                metaDescription: req.body.metaDescription,
+                isFeatured: req.body.isFeatured,
+                isActive: req.body.isActive,
+                isTrash: req.body.isTrash,
+                // Add product images if provided
+                images: req.body.images
+                    ? {
+                        create: req.body.images.map((image: string) => ({ url: image }))
+                    }
+                    : undefined,
+            },
+        });
         res.json(product)
     },
 
