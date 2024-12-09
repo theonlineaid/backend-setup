@@ -1,11 +1,25 @@
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["fullTextIndex", "fullTextSearch"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x", "debian-openssl-3.0.x", "debian-openssl-1.1.x"]
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderEventStatus {
+  PENDING
+  ACCEPTED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
 }
 
 model User {
@@ -55,22 +69,6 @@ model Address {
   @@map("addresses")
 }
 
-// model Product {
-//   id          Int            @id @default(autoincrement())
-//   name        String
-//   description String         @db.Text
-//   price       Decimal
-//   tags        String
-//   createdAt   DateTime       @default(now())
-//   updatedAt   DateTime       @updatedAt
-//   cartItems   CartItem[]
-//   orders      OrderProduct[]
-//   reviews     Review[]
-
-//   @@fulltext([name, description, tags])
-//   @@map("products")
-// }
-
 model Product {
   id                 Int            @id @default(autoincrement())
   name               String
@@ -83,7 +81,7 @@ model Product {
   originalPrice      Decimal?
   discountPercentage Float?         @default(0.0)
   stock              Int            @default(0)
-  images             ProductImage[] @relation("ProductToImages") 
+  images             ProductImage[] @relation("ProductToImages")
   youtubeUrl         String? // Optional field for a YouTube video URL
   brand              String?
   specifications     Json
@@ -110,7 +108,7 @@ model ProductImage {
   productId Int
   product   Product @relation("ProductToImages", fields: [productId], references: [id])
 
-  @@map("product_images") // Optional: custom table name
+  @@map("product_images") 
 }
 
 model CartItem {
@@ -192,15 +190,3 @@ model OrderEvent {
   @@map("order_events")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
-enum OrderEventStatus {
-  PENDING
-  ACCEPTED
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-}
