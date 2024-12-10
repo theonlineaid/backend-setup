@@ -31,3 +31,11 @@ The issue arises because your Prisma Client was generated for `debian-openssl-1.
 This ensures Prisma Client matches the deployment environment's OpenSSL version, resolving the compatibility issue. 
 
 For Ubuntu users, even if your local version uses OpenSSL 1.1.x, deployment environments (e.g., Docker containers) may have OpenSSL 3.x, causing this mismatch. Always verify the target environment's settings.
+
+
+```
+sudo chmod -R 777 ./uploads
+sudo chmod -R 755 ./uploads
+sudo chmod -R 777 ./db_data
+
+```

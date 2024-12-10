@@ -14,7 +14,7 @@ app.use(morgan('tiny'));
 app.use(express.json());
 // app.use(cors())
 app.use(cors({
-    origin: 'http://localhost:3000', // Replace with your frontend URL you can use Array over here 
+    origin: ['http://localhost:3000', 'http://localhost:3001'], // Replace with your frontend URL you can use Array over here 
     methods: 'GET,POST,PUT,PATCH,DELETE',
     credentials: true, 
 }));

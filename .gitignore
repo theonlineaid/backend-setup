@@ -1,9 +1,5 @@
 node_modules
-
-<<<<<<< HEAD
-.env
-=======
 .env
 .vercel
 .build
->>>>>>> docker-setup
+db_data

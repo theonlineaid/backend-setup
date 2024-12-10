@@ -139,11 +139,13 @@ const authCtrl = {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+                sameSite: "none", 
             });
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                sameSite: "none", 
             });
 
             // Respond with user and tokens
