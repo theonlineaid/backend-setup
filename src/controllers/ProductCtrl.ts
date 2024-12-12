@@ -8,7 +8,7 @@ const productCtrl = {
     createProduct: async (req: Request, res: Response) => {
 
         try {
-            ProductSchema.parse(req.body)
+            // ProductSchema.parse(req.body)
 
             const product = await prismaClient.product.create({
                 data: {

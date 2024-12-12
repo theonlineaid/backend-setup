@@ -16,6 +16,8 @@ npm i @types/express --save-dev
 npm i prisma @prisma/client
 npx prisma init
 npx prisma migrate reset
+npx prisma -v
+npx prisma version --json
 npx prisma migrate reset --force --skip-generate
 npx prisma migrate dev --name initial-setup
 npx prisma migrate dev --name CreateUserTable

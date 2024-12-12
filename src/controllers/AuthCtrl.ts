@@ -46,7 +46,7 @@ const authCtrl = {
             const userAgentInfo = getUserAgentInfo(userAgentString);
             const { publicIp, location } = await getPublicIpAndLocation();
 
-            
+
 
             // Create a new user in the database
             const user = await prismaClient.user.create({
@@ -81,7 +81,7 @@ const authCtrl = {
                 }
             });
 
-           
+
 
         } catch (error: any) {
 
@@ -137,19 +137,23 @@ const authCtrl = {
             // Set tokens in cookies
             res.cookie('accessToken', accessToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV !== "development", // Use HTTPS in production
                 maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-                sameSite: "none", 
+                sameSite: 'lax',
             });
             res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV !== "development", // Use HTTPS in production
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-                sameSite: "none", 
+                sameSite: 'lax',
             });
 
             // Respond with user and tokens
-            res.json({ user, token: { accessToken, refreshToken } });
+            // res.json({ user, token: { accessToken, refreshToken } });
+
+            // Respond with user (omit sensitive data like password)
+            const { password: _, ...userWithoutPassword } = user;
+            res.json({ user: userWithoutPassword, token: { accessToken, refreshToken }  });
 
         } catch (error: any) {
             if (error instanceof NotFoundException || error instanceof BadRequestsException) {
@@ -271,27 +275,27 @@ const authCtrl = {
     // Update user profile and cover images
     updateUser: async (req: Request, res: Response) => {
         let profileImage: string | undefined; // Initialize variable for profile image
-    
+
         try {
             const userId = req.user?.id; // Get user ID from the authenticated user (via auth middleware)
             const { userName } = req.body;
-    
+
             // Validate userId
             if (!userId || isNaN(Number(userId))) {
                 throw new BadRequestsException('Invalid user ID.', ErrorCode.VALIDATION_ERROR);
             }
-    
+
             // Retrieve existing user data
             const existingUser = await prismaClient.user.findUnique({ where: { id: Number(userId) } });
-    
+
             if (!existingUser) {
                 throw new BadRequestsException('User not found.', ErrorCode.USER_NOT_FOUND);
             }
-    
+
             // Handle profile image upload
             if (req.file) {
                 profileImage = req.file?.filename; // Get the new profile image filename
-    
+
                 // Construct the path for the old profile image
                 const oldProfileImagePath = path.join('uploads', existingUser.userName, existingUser.profileImage);
                 // Delete the old profile image if it exists
@@ -301,7 +305,7 @@ const authCtrl = {
             } else {
                 throw new BadRequestsException('Profile image is required.', ErrorCode.VALIDATION_ERROR);
             }
-    
+
             // Update user profile image in the database
             const updatedUser = await prismaClient.user.update({
                 where: { id: Number(userId) },
@@ -311,7 +315,7 @@ const authCtrl = {
                     // You can add other fields to update here (email, bio, etc.)
                 },
             });
-    
+
             // Send success response
             res.status(200).json({
                 message: 'Profile image updated successfully',
@@ -319,7 +323,7 @@ const authCtrl = {
                 user: updatedUser,
                 timestamp: new Date().toISOString(),
             });
-    
+
         } catch (error: any) {
             // Handle any errors that may have occurred
             if (error instanceof BadRequestsException) {

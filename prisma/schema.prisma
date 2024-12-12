@@ -9,19 +9,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
-enum OrderEventStatus {
-  PENDING
-  ACCEPTED
-  OUT_FOR_DELIVERY
-  DELIVERED
-  CANCELLED
-}
-
 model User {
   id                     Int        @id @default(autoincrement())
   name                   String
@@ -79,10 +66,9 @@ model Product {
   price              Decimal
   tags               String
   originalPrice      Decimal?
-  discountPercentage Float?         @default(0.0)
+  discountPercentage Float?         @default(0)
   stock              Int            @default(0)
-  images             ProductImage[] @relation("ProductToImages")
-  youtubeUrl         String? // Optional field for a YouTube video URL
+  youtubeUrl         String?
   brand              String?
   specifications     Json
   variants           Json
@@ -92,11 +78,12 @@ model Product {
   isFeatured         Boolean        @default(false)
   isActive           Boolean        @default(true)
   isTrash            Boolean        @default(false)
-  cartItems          CartItem[]
-  orders             OrderProduct[]
-  reviews            Review[]
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
+  cartItems          CartItem[]
+  orders             OrderProduct[]
+  images             ProductImage[] @relation("ProductToImages")
+  reviews            Review[]
 
   @@fulltext([name, description, tags])
   @@map("products")
@@ -104,11 +91,12 @@ model Product {
 
 model ProductImage {
   id        Int     @id @default(autoincrement())
-  url       String // URL or file path of the image
+  url       String
   productId Int
   product   Product @relation("ProductToImages", fields: [productId], references: [id])
 
-  @@map("product_images") 
+  @@index([productId], map: "product_images_productId_fkey")
+  @@map("product_images")
 }
 
 model CartItem {
@@ -190,3 +178,15 @@ model OrderEvent {
   @@map("order_events")
 }
 
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderEventStatus {
+  PENDING
+  ACCEPTED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
