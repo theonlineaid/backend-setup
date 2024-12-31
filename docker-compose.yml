@@ -36,7 +36,17 @@ services:
       MYSQL_ROOT_PASSWORD: ${COMMON_PASS}
     depends_on:
       - db
-      
+
+  nginx:
+    image: nginx:alpine
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf 
+    depends_on:
+      - app  # Ensure Nginx starts after the app container is up
+
 # is's called docker volume
 volumes:
   db_data:

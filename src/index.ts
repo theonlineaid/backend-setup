@@ -21,7 +21,7 @@ app.use(cors({
 
 app.use(cookieParser());
 app.use(errorMiddleware);
-// app.use('/', (req, res) => res.send("<h1>Hello</h1>"))
+// app.use('/', (req, res) => res.send("<h1>Hello...</h1>"))
 app.use('/api', RootRouter)
 
 export const prismaClient = new PrismaClient({
