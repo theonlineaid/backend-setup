@@ -14,38 +14,6 @@ declare global {
     }
 }
 
-// const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
-
-
-//     try {
-//         const token = req.cookies.accessToken;
-
-//         if (!token) {
-//             console.error('No token found in cookies');
-//             throw new UnauthorizedException('Token not provided', ErrorCode.UNAUTHORIZED);
-//         }
-
-//         // if (!token) {
-//         //     throw new UnauthorizedException('Unauthorized', ErrorCode.UNAUTHORIZED);
-//         // }
-
-//         const payload = jwt.verify(token, JWT_SECRET) as any;
-
-//         const user = await prismaClient.user.findFirst({ where: { id: payload.userId } });
-
-//         if (!user) {
-//             throw new UnauthorizedException('Unauthorized', ErrorCode.UNAUTHORIZED);
-//         }
-
-//         req.user = user;
-//         next();
-//     } catch (error) {
-//         console.error('Authentication error:', error);
-//         next(new UnauthorizedException('Unauthorized', ErrorCode.UNAUTHORIZED));
-//     }
-
-// }
-
 const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const token = req.cookies.accessToken;
