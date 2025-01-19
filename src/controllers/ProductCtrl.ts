@@ -149,47 +149,7 @@ const productCtrl = {
         }
     },
 
-    // searchProducts: async (req: Request, res: Response) => {
-    //     try {
-    //         // Get the search query from the request parameters
-    //         const searchQuery = req.query.q?.toString();
-
-    //         // Get pagination options from query parameters or use defaults
-    //         const skip = req.query?.skip ? +req.query?.skip : 0;
-    //         const take = req.query.take ? +req.query.take : 5;
-
-    //         // Find products that match the search query
-    //         const products = await prismaClient.product.findMany({
-    //             where: {
-    //                 name: {
-    //                     search: searchQuery
-    //                 },
-    //                 description: {
-    //                     search: searchQuery,
-    //                 },
-    //                 tags: {
-    //                     search: searchQuery,
-    //                 }
-    //             },
-
-    //             skip: skip,
-    //             take: take,
-    //         });
-
-    //         if (!products || products.length === 0) {
-    //             throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
-    //         }
-    //         // Send the response with the search results
-    //         res.json({ products });
-
-    //     } catch (error) {
-    //         res.status(500).json({ error: 'Internal Server Error to try search' });
-    //         console.error(error)
-    //         throw new NotFoundException('Product not found.', ErrorCode.PRODUCT_NOT_FOUND);
-    //     }
-    //     console.log("search product ======================")
-    // },
-
+ 
     getSingleProduct: async (req: Request, res: Response) => {
         try {
             const productId = parseInt(req.params.id);
@@ -216,6 +176,37 @@ const productCtrl = {
 
         console.log("Single product ======================")
     },
+
+    getRecentlyViewedProducts: async (req: Request, res: Response) => {
+        try {
+            const userId = req.user.id; // Assuming `req.user` contains authenticated user details
+
+            // Fetch the last 6 recently viewed products
+            const recentViews = await prismaClient.productView.findMany({
+                where: { userId },
+                orderBy: { viewedAt: 'desc' },
+                take: 6,
+                include: { product: true },
+            });
+
+            console.log("recentViews", recentViews);
+
+            const products = recentViews.map((view) => view.product);
+
+            res.status(200).json({
+                success: true,
+                data: products,
+            });
+
+        } catch (error) {
+            console.error("Error fetching recently viewed products:", error);
+            res.status(500).json({
+                message: "Internal Server Error",
+                errorCode: "INTERNAL_SERVER_ERROR",
+            });
+        }
+    }
+
 };
 
 export default productCtrl;

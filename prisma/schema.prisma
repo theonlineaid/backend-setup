@@ -10,10 +10,10 @@ datasource db {
 }
 
 model User {
-  id                     Int        @id @default(autoincrement())
+  id                     Int           @id @default(autoincrement())
   name                   String
-  email                  String     @unique
-  userName               String?    @unique
+  email                  String        @unique
+  userName               String?       @unique
   password               String
   profileImage           String?
   coverImage             String?
@@ -25,9 +25,9 @@ model User {
   address                String?
   defaultBillingAddress  Int?
   defaultShippingAddress Int?
-  createdAt              DateTime   @default(now())
-  updatedAt              DateTime   @updatedAt
-  role                   Role       @default(USER)
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  role                   Role          @default(USER)
   userAgentInfo          Json?
   ipAddress              String?
   location               Json?
@@ -35,6 +35,12 @@ model User {
   cartItems              CartItem[]
   orders                 Order[]
   reviews                Review[]
+  isBanned               Boolean       @default(false)
+  isBlocked              Boolean       @default(false)
+  isActive               Boolean       @default(true)
+  lastLoginAt            DateTime?
+  banReason              String?
+  ProductViews           ProductView[]
 
   @@map("users")
 }
@@ -84,9 +90,22 @@ model Product {
   orders             OrderProduct[]
   images             ProductImage[] @relation("ProductToImages")
   reviews            Review[]
+  ProductViews       ProductView[]
 
   @@fulltext([name, description, tags])
   @@map("products")
+}
+
+model ProductView {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  viewedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId]) // Ensures each product is only logged once per user
+  @@map("product_views")
 }
 
 model ProductImage {

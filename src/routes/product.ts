@@ -12,6 +12,7 @@ ProductRouter.delete('/:id', [authMiddleware, adminMiddleware], errorHandler(pro
 ProductRouter.get('/', errorHandler(productCtrl.getAllProducts))
 ProductRouter.get('/search', errorHandler(productCtrl.searchProducts)) // http://localhost:5000/api/products/search?q=apple&skip=0&take=5
 ProductRouter.get('/:id', errorHandler(productCtrl.getSingleProduct))
+ProductRouter.get('/recent/views', authMiddleware, errorHandler(productCtrl.getRecentlyViewedProducts)); // Get recently viewed products
 
 
 export default ProductRouter;
